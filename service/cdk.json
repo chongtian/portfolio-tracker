@@ -1,0 +1,4 @@
+{
+  "app": "node dist/infra/bin/cdk-app.js",
+  "context": {}
+}

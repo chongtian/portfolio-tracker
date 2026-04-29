@@ -1,0 +1,39 @@
+{
+  "name": "portfoliotracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rm -rf cdk.out dist",
+    "cdk-build": "tsc",
+    "cdk-synth": "cdk synth",
+    "cdk-deploy:dev": "cdk deploy --context stage=dev",
+    "cdk-deploy:prod": "cdk deploy --context stage=prod",
+    "cdk-diff:dev": "cdk diff --context stage=dev",
+    "cdk-diff:prod": "cdk diff --context stage=prod",
+    "cdk-destroy:dev": "cdk destroy --context stage=dev",
+    "cdk-destroy:prod": "cdk destroy --context stage=prod",
+    "build:local": "esbuild src/functions/*.ts --bundle --platform=node --target=node20 --outdir=dist/functions --sourcemap --alias:@shared=./src/shared",
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@jest/globals": "^30.3.0",
+    "@types/aws-lambda": "^8.10.161",
+    "@types/node": "^25.6.0",
+    "aws-cdk-lib": "^2.100.0",
+    "constructs": "^10.0.0",
+    "dotenv": "^16.3.1",
+    "esbuild": "^0.28.0",
+    "ts-jest": "^29.4.9",
+    "typescript": "^5.5.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.382.0",
+    "@aws-sdk/lib-dynamodb": "^3.382.0",
+    "ulid": "^3.0.2"
+  }
+}
