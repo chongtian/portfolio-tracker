@@ -3,7 +3,6 @@ export interface PositionEntity {
     SK: string;
     lastUpdated: string;
     entityType: string;
-
     userId:string;
     accountId: string;
     instrumentId: string;
@@ -12,4 +11,6 @@ export interface PositionEntity {
     marketPrice?: number;
     marketValue?: number;
     unrealizedPnl?: number;
+    realizedPnl?: number; // for dividends
+    asOfDate?: string;
 }

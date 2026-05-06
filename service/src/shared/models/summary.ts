@@ -9,7 +9,6 @@ export interface SummaryEntity {
     totalPositionsValue: number;
     unrealizedPnl: number;
     realizedPnl?: number; // for future extension to support realized PnL in summary
-    netWorth: number;
     asOfDate?: string; // for future extension to support historical summary
     lastUpdated: string;
 }

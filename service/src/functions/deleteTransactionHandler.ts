@@ -1,9 +1,9 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from "aws-lambda";
 import { parseEvent } from "@shared/utils/parseEvent";
-import { badRequest, internalError, notFound, okDeleted } from "@shared/utils/response";
-import { TransactionEntity, TransactionInput } from "@shared/models/transaction";
-import { deleteItem, getItemsByPKandSK, sendCommand, TABLE_NAME, TransactItems } from "@shared/clients/dynamoDb";
-import { transactionPartitionKey, transactionSortKey } from "@shared/utils/getKeys";
+import { badRequest, internalError, internalErrorForDebug, notFound, okDeleted } from "@shared/utils/response";
+import { TransactionEntity } from "@shared/models/transaction";
+import { getItemsByPKandSK, sendCommand, TABLE_NAME, TransactItems } from "@shared/clients/dynamoDb";
+import { transactionPartitionKey } from "@shared/utils/getKeys";
 import { TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { processTransaction } from "@shared/business/processTransaction";
 
@@ -15,39 +15,33 @@ export const deleteTransactionHandler = async (
         const result = parseEvent(event);
         if (!result.success) return badRequest(result.error);
 
-        const { body, userId, stage } = result.data;
+        const { pathParameters, queryStringParameters, userId, stage } = result.data;
+        const { sk } = pathParameters || {};
 
-        const transactionInput = body as TransactionInput;
-        const { txnId, accountId, txnDate } = transactionInput;
-
-        if (
-            !accountId ||
-            !txnId ||
-            !txnDate
-        ) {
-            return badRequest("Missing required fields");
-        }
+        if (!sk) return badRequest("Missing id");
 
         const PK = transactionPartitionKey(userId!);
-        const SK = transactionSortKey(accountId, txnDate, txnId);
+        const SK = sk;
 
         const deleteKey = {
             PK,
             SK,
         };
 
-        const queryResult = await getItemsByPKandSK<TransactionEntity>(PK, SK, stage);
+        const queryResult = await getItemsByPKandSK<TransactionEntity>(PK, SK, TABLE_NAME());
         const transactionToDelete = queryResult[0] ?? null;
 
         if (!transactionToDelete) {
             return notFound("Transaction not found");
         }
 
+        const accountId = transactionToDelete.accountId;
+
         const transactItems: TransactItems = [];
 
         transactItems.push({
             Delete: {
-                TableName: TABLE_NAME(stage),
+                TableName: TABLE_NAME(),
                 Key: deleteKey,
                 ConditionExpression: 'attribute_exists(PK)'
             }
@@ -67,6 +61,17 @@ export const deleteTransactionHandler = async (
     } catch (error) {
         if (error instanceof Error && error.name === "ConditionalCheckFailedException") {
             return notFound("Transaction not found");
+        }
+
+        if (error instanceof Error && error.name === "TransactionCanceledException") {
+            const reasons = (error as any).CancellationReasons;
+            if (process.env.STAGE === "dev") {
+                return internalErrorForDebug(reasons);
+            }
+        }
+
+        if (process.env.STAGE === "dev") {
+            return internalErrorForDebug(error);
         }
 
         console.error(error);

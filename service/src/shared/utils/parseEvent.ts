@@ -1,4 +1,5 @@
 import { APIGatewayProxyEventPathParameters, APIGatewayProxyEventQueryStringParameters, APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
+import { uuidToBase64Url } from "./uuidToBase64Url";
 
 export interface LambdaContext {
     body: unknown;
@@ -23,23 +24,18 @@ type ParseResult =
 export const parseEvent = (event: APIGatewayProxyEventV2WithJWTAuthorizer): ParseResult => {
     try {
 
-        const isBodyRequired = event.requestContext?.http.method !== "GET";
-        
-        if (!event.body && isBodyRequired) {
-            return { success: false, error: "Missing body" };
-        }
-
-        const body = (isBodyRequired && typeof event.body === "string") ? JSON.parse(event.body) : event.body;
+        const body = (typeof event.body === "string") ? JSON.parse(event.body) : event.body;
 
         let userId = event.requestContext?.authorizer?.jwt?.claims.sub || null;
         if (!userId) {
             console.warn("User ID not found in authorizer claims");
             userId = body.userId; //fall back to userId in body if available
+        } else {
+            userId = uuidToBase64Url(userId.toString());
         }
 
-        if (isBodyRequired && body.userId && body.userId !== userId) {
+        if (body) {
             body.userId = userId; //override body userId with the one from claims to ensure consistency
-            console.warn(`User ID in body (${body.userId}) does not match user ID from claims (${userId})`);
         }
 
         return {

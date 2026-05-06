@@ -1,0 +1,1 @@
+export {getTransactionHandler} from '../../service/src/functions/getTransactionHandler';

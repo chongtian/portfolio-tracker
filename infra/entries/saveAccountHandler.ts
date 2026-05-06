@@ -1,0 +1,1 @@
+export {saveAccountHandler} from '../../service/src/functions/saveAccountHandler';

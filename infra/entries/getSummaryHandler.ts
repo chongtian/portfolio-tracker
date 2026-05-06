@@ -1,0 +1,1 @@
+export {getSummaryHandler} from '../../service/src/functions/getSummaryHandler';

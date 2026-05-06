@@ -1,0 +1,31 @@
+{
+  "name": "portfolio-tracker-infra",
+  "version": "1.0.0",
+  "description": "Infrastructure as Code for Portfolio Tracker",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rm -rf cdk.out dist",
+    "cdk-build": "tsc",
+    "cdk-synth": "npm run build:client && cdk synth",
+    "cdk-deploy:dev": "npm run build:client && cdk deploy --context stage=dev",
+    "cdk-deploy:prod": "npm run build:client && cdk deploy --context stage=prod",
+    "cdk-diff:dev": "cdk diff --context stage=dev",
+    "cdk-diff:prod": "cdk diff --context stage=prod",
+    "cdk-destroy:dev": "cdk destroy --context stage=dev",
+    "cdk-destroy:prod": "cdk destroy --context stage=prod",
+    "build:client": "cd ../client && npm run build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "aws-cdk": "^2.100.0",
+    "aws-cdk-lib": "^2.252.0",
+    "constructs": "^10.6.0",
+    "dotenv": "^16.3.1",
+    "esbuild": "^0.28.0",
+    "typescript": "^5.5.0"
+  }
+}

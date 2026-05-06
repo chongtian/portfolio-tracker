@@ -1,0 +1,1 @@
+export {summarizePositionHandler} from '../../service/src/functions/summarizePositionHandler';

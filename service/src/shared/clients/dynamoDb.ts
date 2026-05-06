@@ -19,23 +19,24 @@ const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
 export const TABLE_NAME = (stage?: string) => {
-    return `${process.env.TABLE_NAME ?? "portfolio_tracker"}_${stage ?? "dev"}`;
+    // return `${process.env.TABLE_NAME ?? "portfolio_tracker"}_${stage ?? "dev"}`;
+    return process.env.TABLE_NAME ?? "portfolio_tracker_dev";
 };
 
-export const sendCommand = async (command:TransactWriteCommand) => {
+export const sendCommand = async (command: TransactWriteCommand) => {
     return await docClient.send(command);
 }
 
-export const putItem = async (item: Record<string, unknown> | object, conditionExpression?: string, stage?: string) =>
-    docClient.send(new PutCommand({ TableName: TABLE_NAME(stage), Item: item, ConditionExpression: conditionExpression }));
+export const putItem = async (item: Record<string, unknown> | object, tableName: string, conditionExpression?: string) =>
+    docClient.send(new PutCommand({ TableName: tableName, Item: item, ConditionExpression: conditionExpression }));
 
-export const getItem = async <T = Record<string, unknown>>(key: Record<string, unknown>, stage?: string) => {
-    const result = await docClient.send(new GetCommand({ TableName: TABLE_NAME(stage), Key: key }));
+export const getItem = async <T = Record<string, unknown>>(key: Record<string, unknown>, tableName: string) => {
+    const result = await docClient.send(new GetCommand({ TableName: tableName, Key: key }));
     return result.Item as T | undefined;
 };
 
-export const deleteItem = async (key: Record<string, unknown> | object, conditionExpression?: string, stage?: string) =>
-    docClient.send(new DeleteCommand({ TableName: TABLE_NAME(stage), Key: key, ConditionExpression: conditionExpression }));
+export const deleteItem = async (key: Record<string, unknown> | object, tableName: string, conditionExpression?: string) =>
+    docClient.send(new DeleteCommand({ TableName: tableName, Key: key, ConditionExpression: conditionExpression }));
 
 const queryItems = async <T = Record<string, unknown>>(params: QueryCommandInput) => {
     const result = await docClient.send(new QueryCommand(params));
@@ -48,18 +49,18 @@ export const updateItem = async (params: UpdateCommandInput) =>
 export const batchWriteItems = async (requestItems: Record<string, any[]>) =>
     docClient.send(new BatchWriteCommand({ RequestItems: requestItems }));
 
-export const getItemsByPK = async <T = Record<string, unknown>>(pkValue: string, entityType?: string, stage?: string) => {
+export const getItemsByPK = async <T = Record<string, unknown>>(pkValue: string, tableName: string, entityType?: string) => {
 
     const params = entityType ?
         {
-            TableName: TABLE_NAME(stage),
+            TableName: tableName,
             KeyConditionExpression: "PK = :pkValue AND begins_with(SK, :entityType)",
             ExpressionAttributeValues: {
                 ":pkValue": pkValue,
                 ":entityType": entityType,
             },
         } : {
-            TableName: TABLE_NAME(stage),
+            TableName: tableName,
             KeyConditionExpression: "PK = :pkValue",
             ExpressionAttributeValues: {
                 ":pkValue": pkValue,
@@ -70,16 +71,16 @@ export const getItemsByPK = async <T = Record<string, unknown>>(pkValue: string,
     return result;
 }
 
-export const getItemsByPKandSK = async <T = Record<string, unknown>>(pkValue: string, skValue: string, stage?: string) => {
+export const getItemsByPKandSK = async <T = Record<string, unknown>>(pkValue: string, skValue: string, tableName: string) => {
 
     const params = {
-            TableName: TABLE_NAME(stage),
-            KeyConditionExpression: "PK = :pkValue AND SK = :skValue",
-            ExpressionAttributeValues: {
-                ":pkValue": pkValue,
-                ":skValue": skValue,
-            },
-        };
+        TableName: tableName,
+        KeyConditionExpression: "PK = :pkValue AND SK = :skValue",
+        ExpressionAttributeValues: {
+            ":pkValue": pkValue,
+            ":skValue": skValue,
+        },
+    };
 
     const result = await queryItems<T>(params);
     return result;

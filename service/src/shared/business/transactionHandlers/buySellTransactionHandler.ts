@@ -1,11 +1,12 @@
-import { queryTable, TABLE_NAME, TransactItems } from "@shared/clients/dynamoDb";
+import { queryTable, TransactItems } from "@shared/clients/dynamoDb";
 import { LotEntity } from "@shared/models/lot";
 import { TransactionEntity, TransactionType } from "@shared/models/transaction";
 import { EntityTypeLot, lotPartitionKey } from "@shared/utils/getKeys";
-import { createLotHandler } from "./createLotHandler";
-import { updatePositionHandler } from "./updatePositionHandler";
-import { createPnlHandler } from "./createPnlHandler";
+import { createLot } from "./createLot";
+import { updatePosition } from "./updatePosition";
+import { createPnl } from "./createPnl";
 import { releaseCashCollateral } from "./releaseCashCollateral";
+import { getMultipler } from "@shared/utils/getMultipler";
 
 export const buySellTransactionHandler = async (userId: string, accountId: string, tableName: string, txn: TransactionEntity): Promise<TransactItems> => {
 
@@ -34,18 +35,19 @@ export const buySellTransactionHandler = async (userId: string, accountId: strin
 
     if (!openLots || openLots.length === 0) {
         // create lot, position
-        const lotCreate = await createLotHandler(txn, tableName);
+        const lotCreate = await createLot(txn, tableName);
         transactItems.push(...lotCreate);
 
+        const qty = txn.transactionType === TransactionType.SELL ? -1 * (txn.quantity || 0) : txn.quantity || 0;
         const lotEntity = {
             userId: txn.userId!,
             accountId: txn.accountId,
             instrumentId: txn.instrumentId,
-            remainingQuantity: txn.quantity || 0,
-            cost: txn.quantity! * txn.price! + (txn.fees || 0),
+            remainingQuantity: qty,
+            cost: qty * txn.price! * getMultipler(txn.instrumentId) + (txn.fees || 0),
             cashCollateral: txn.cashCollateral
         }
-        const positionUpdate = await updatePositionHandler(lotEntity as LotEntity, tableName);
+        const positionUpdate = await updatePosition(lotEntity as LotEntity, tableName);
         transactItems.push(...positionUpdate);
 
         return transactItems;
@@ -76,8 +78,9 @@ export const buySellTransactionHandler = async (userId: string, accountId: strin
 
         const remainingQty = isBuy ? Math.min(0, lot.remainingQuantity + txnQty) : Math.max(0, lot.remainingQuantity - txnQty);
         txnQty = Math.max(0, txnQty - Math.abs(lot.remainingQuantity));
-        lot.realizedPnl = (lot.realizedPnl || 0) + (txn.price || 0 - lot.openPrice) * (lot.remainingQuantity - remainingQty);
-        lot.remainingQuantity = remainingQty;        
+        lot.realizedPnl = (lot.realizedPnl || 0) + (txn.price || 0 - lot.openPrice) * (lot.remainingQuantity - remainingQty) * getMultipler(txn.instrumentId);
+        lot.remainingQuantity = remainingQty;
+        lot.cost = lot.openPrice * lot.remainingQuantity * getMultipler(lot.instrumentId) + (lot.feesAllocated || 0);        
         lot.cashCollateral = (lot.cashCollateral || 0) * lot.remainingQuantity / lot.openQuantity;
         releaseCollateral += (lot.cashCollateral || 0) * (lot.openQuantity - lot.remainingQuantity) / lot.openQuantity;
         updateLotsPlan.push(lot);
@@ -95,7 +98,7 @@ export const buySellTransactionHandler = async (userId: string, accountId: strin
         txn.quantity = txnQty;
         txn.fees = txnFee;
         txn.cashCollateral = (txn.cashCollateral || 0) - releaseCollateral;
-        const lotCreate = await createLotHandler(txn, tableName);
+        const lotCreate = await createLot(txn, tableName);
         transactItems.push(...lotCreate);
     }
 
@@ -108,24 +111,27 @@ export const buySellTransactionHandler = async (userId: string, accountId: strin
                 UpdateExpression: "SET remainingQuantity = :remainingQuantity, \
                 realizedPnl = :realizedPnl, \
                 feesAllocated = :feesAllocated,\
-                cashCollateral = :cashCollateral",
+                cashCollateral = :cashCollateral,\
+                lastUpdated = :lastUpdated, cost = :cost",
                 ExpressionAttributeValues: {
                     ":remainingQuantity": lot.remainingQuantity,
                     ":realizedPnl": lot.realizedPnl,
                     ":feesAllocated": lot.feesAllocated,
-                    ":cashCollateral": lot.cashCollateral
+                    ":cashCollateral": lot.cashCollateral,
+                    ":lastUpdated": new Date().toISOString(),
+                    ":cost": lot.cost
                 }
             }
         });
 
         // create PnL record for closed quantity
-        const pnlCreate = createPnlHandler(lot, txn, tableName);
+        const pnlCreate = createPnl(lot, txn, tableName);
         transactItems.push(...pnlCreate);
     });
 
     // sum up remainingQty for all the lots in the openLots, including the newly created lot
     const totalRemainingQty = openLots.reduce((sum, lot) => sum + lot.remainingQuantity, 0) + (txnQty || 0);
-    const totalCost = openLots.reduce((sum, lot) => sum + lot.cost, 0) + (txn.quantity! * txn.price! + (txn.fees || 0));
+    const totalCost = openLots.reduce((sum, lot) => sum + lot.cost, 0) + (txn.quantity! * txn.price! * getMultipler(txn.instrumentId) + (txn.fees || 0));
     const lotEntity = {
         userId: txn.userId!,
         accountId: txn.accountId,
@@ -133,7 +139,7 @@ export const buySellTransactionHandler = async (userId: string, accountId: strin
         remainingQuantity: totalRemainingQty,
         cost: totalCost
     }
-    const positionUpdate = await updatePositionHandler(lotEntity as LotEntity, tableName);
+    const positionUpdate = await updatePosition(lotEntity as LotEntity, tableName);
     transactItems.push(...positionUpdate);
 
     if (releaseCollateral !== 0) {

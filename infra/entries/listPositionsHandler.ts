@@ -1,0 +1,1 @@
+export {listPositionsHandler} from '../../service/src/functions/listPositionsHandler';

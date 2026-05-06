@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from "aws-lambda";
 import { parseEvent } from "@shared/utils/parseEvent";
-import { badRequest, internalError, okCreated } from "@shared/utils/response";
+import { badRequest, internalError, internalErrorForDebug, okCreated } from "@shared/utils/response";
 import { AssetType, TransactionInput } from "@shared/models/transaction";
 import { sendCommand, TABLE_NAME, TransactItems } from "@shared/clients/dynamoDb";
 import { EntityTypeTransaction, transactionPartitionKey, transactionSortKey } from "@shared/utils/getKeys";
@@ -57,7 +57,7 @@ export const createTransactionHandler = async (
         const transactItems: TransactItems = [];
         transactItems.push({
             Put: {
-                TableName: TABLE_NAME(stage),
+                TableName: TABLE_NAME(),
                 Item: transactionEntity
             }
         });
@@ -78,6 +78,14 @@ export const createTransactionHandler = async (
             const isDuplicate = reasons?.[0]?.Code === "ConditionalCheckFailed";
 
             if (isDuplicate) return badRequest("Duplicate transaction ignored");
+
+            if (process.env.STAGE === "dev") {
+                return internalErrorForDebug(reasons);
+            }
+        }
+
+        if (process.env.STAGE === "dev") {
+            return internalErrorForDebug(error);
         }
 
         return internalError();

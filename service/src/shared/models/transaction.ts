@@ -36,10 +36,12 @@ export enum TransactionType {
   DIVIDEND = "DIVIDEND",
   INTEREST = "INTEREST",
   EXPIRATION = "EXPIRATION",
-  ASSIGNMENT = "ASSIGNMENT",
-  EXERCISE = "EXERCISE",
+  // ASSIGNMENT = "ASSIGNMENT",
+  // EXERCISE = "EXERCISE",
   SPLIT = "SPLIT",
   DEPOSIT = "DEPOSIT",
   WITHDRAW = "WITHDRAW",
   ADJUST = "ADJUST",
 }
+
+export const OptionMultipler = 100; 

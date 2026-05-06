@@ -7,7 +7,7 @@ export interface AccountInput extends BaseInput {
   accountNumber?: string; // this is the optional actual account number from the broker.
   accountType: AccountType;
   baseCurrency: string;
-  active: true;
+  active: boolean;
 }
 
 export interface AccountEntity extends AccountInput {

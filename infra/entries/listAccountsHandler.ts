@@ -1,0 +1,1 @@
+export {listAccountsHandler} from '../../service/src/functions/listAccountsHandler';

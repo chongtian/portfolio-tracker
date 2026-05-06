@@ -19,8 +19,6 @@ export const validateTransaction = (input: TransactionInput): ValidateResult => 
         TransactionType.DIVIDEND,
         TransactionType.INTEREST,
         TransactionType.EXPIRATION,
-        TransactionType.ASSIGNMENT,
-        TransactionType.EXERCISE,
         TransactionType.SPLIT,
         TransactionType.DEPOSIT,
         TransactionType.WITHDRAW,
@@ -35,8 +33,11 @@ export const validateTransaction = (input: TransactionInput): ValidateResult => 
     }
 
     if (assetType === AssetType.OPTION) {
-        if (!([TransactionType.BUY, TransactionType.SELL, TransactionType.EXPIRATION, TransactionType.ASSIGNMENT, TransactionType.EXERCISE].includes(transactionType))) {
+        if (!([TransactionType.BUY, TransactionType.SELL, TransactionType.EXPIRATION].includes(transactionType))) {
             return { success: false, error: `Invalid transaction type ${transactionType} for asset type ${assetType}` };
+        }
+        if (transactionType === TransactionType.EXPIRATION) {
+            return { success: false, error: `Transaction type ${transactionType} is reserved for internal use` };
         }
     }
 
@@ -44,14 +45,7 @@ export const validateTransaction = (input: TransactionInput): ValidateResult => 
         if (!([TransactionType.DEPOSIT, TransactionType.WITHDRAW, TransactionType.ADJUST, TransactionType.INTEREST].includes(transactionType))) {
             return { success: false, error: `Invalid transaction type ${transactionType} for asset type ${assetType}` };
         }
-    }
-
-    if (!input.currency) {
-        input.currency = 'USD'; //default to USD if currency is missing
-    }
-
-    if (!input.amount) {
-        input.amount = (input.quantity || 0) * (input.price || 0);
+        input.instrumentId = "_CASH"; 
     }
 
     if (transactionType === TransactionType.SPLIT && (!input.splitRatio || input.splitRatio <= 0)) {
@@ -71,6 +65,18 @@ export const validateTransaction = (input: TransactionInput): ValidateResult => 
         if (optionContract.optionType === OptionType.CALL) {
             input.cashCollateral = 0; // CALL options have no cash collateral
         }
+    }
+
+    if (transactionType === TransactionType.DIVIDEND && !input.amount) {
+        return { success: false, error: `For dividend transaction, amount is total dividend and required` };
+    }
+
+    if (!input.currency) {
+        input.currency = 'USD'; //default to USD if currency is missing
+    }
+
+    if (!input.amount) {
+        input.amount = (input.quantity || 0) * (input.price || 0);
     }
 
     return { success: true };
