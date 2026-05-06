@@ -450,17 +450,21 @@ export class PortfolioTrackerStack extends cdk.Stack {
     // ============================================================================
     const schedule = new scheduler.Schedule(this, 'DailySchedule', {
       schedule: scheduler.ScheduleExpression.cron({
-        minute: '0',
+        minute: '30',
         hour: '16',
         weekDay: 'MON-FRI',
       }),
-      timeZone: 'America/New_York',
+      timeZone: 'America/Chicago', // not working
       target: new targets.LambdaInvoke(summarizePositionFn, {
         input: scheduler.ScheduleTargetInput.fromObject({
           action: 'summarize_positions',
         }),
       }),
     } as scheduler.ScheduleProps);
+
+    // Force timezone into CloudFormation
+    const cfn = schedule.node.defaultChild as scheduler.CfnSchedule;
+    cfn.addPropertyOverride('ScheduleExpressionTimezone', 'America/Chicago');
 
 
 
@@ -495,7 +499,11 @@ export class PortfolioTrackerStack extends cdk.Stack {
 
     new s3Deployment.BucketDeployment(this, 'ClientDeployment', {
       sources: [
-        s3Deployment.Source.asset('../client/dist'),
+        s3Deployment.Source.asset('../client/dist',
+          {
+            exclude: ["config.json"],
+          }
+        ),
         s3Deployment.Source.data('config.json', JSON.stringify(
           {
             apiEndpoint: `${stagedApi.url}/portfolio`, appStage: stage.toUpperCase()

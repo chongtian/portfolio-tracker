@@ -32,7 +32,8 @@ export const listTransactionsHandler = async (event: APIGatewayProxyEventV2WithJ
                 ':endDate': endDateValue
             },
             Limit: pageSizeValue,
-            ExclusiveStartKey: exclusiveStartKey
+            ExclusiveStartKey: exclusiveStartKey,
+            ScanIndexForward: false
         }
 
         const queryResult = await queryTable(queryParams);
