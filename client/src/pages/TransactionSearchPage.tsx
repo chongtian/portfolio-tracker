@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchTransactions } from '../services/api'
 import './PageStyles.css'
@@ -17,10 +17,10 @@ interface TransactionPreview {
   note: string
 }
 
-function convertTransactionEntityToTransactionPreview(txn: TransactionEntity, accountMap: Map<string, string>): TransactionPreview {
+function getTransactionPreview(txn: TransactionEntity, accountMap: Map<string, string>): TransactionPreview {
   const txnPreview: TransactionPreview = {
     transactionId: txn.SK,
-    txnDate: (new Date(txn.txnDate)).toLocaleDateString(),
+    txnDate: txn.txnDate,
     accountName: accountMap.get(txn.accountId) ?? 'Loading...',
     note: txn.note || '',
     description: ''
@@ -72,6 +72,7 @@ export default function TransactionSearchPage() {
   }, [accounts])
 
   const PAGE_SIZE = 25
+  const loaderRef = useRef(null);
 
   const loadTransactions = async (nextToken?: string, append = false) => {
     try {
@@ -106,13 +107,36 @@ export default function TransactionSearchPage() {
     await loadTransactions(undefined, false)
   }
 
-  const handleLoadMore = async () => {
-    if (!queryResult.nextToken) {
-      return
+  // const handleLoadMore = async () => {
+  //   if (!queryResult.nextToken) {
+  //     return
+  //   }
+
+  //   await loadTransactions(queryResult.nextToken, true)
+  // }
+
+  
+useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadTransactions(queryResult.nextToken, true)
+        }
+      },
+      { threshold: 1 }
+    );
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current)
     }
 
-    await loadTransactions(queryResult.nextToken, true)
-  }
+    return () => {
+      if (loaderRef.current) {
+        observer.unobserve(loaderRef.current)
+      }
+    };
+  }, [loaderRef.current, queryResult])
+
 
   useEffect(() => {
     const loadData = async () => {
@@ -183,11 +207,11 @@ export default function TransactionSearchPage() {
               </tr>
             ) : null}
             {queryResult.items.map(txn => {
-              const transaction = convertTransactionEntityToTransactionPreview(txn, accountMap)
+              const transaction = getTransactionPreview(txn, accountMap)
 
               return (
                 <tr key={transaction.transactionId} className="block md:table-row border-b mb-4 md:mb-0">
-                  <td className="flex justify-start gap-2 md:table-cell px-4 py-2"><span className="font-bold md:hidden text-gray-700">Date</span> {transaction.txnDate}</td>
+                  <td className="flex justify-start gap-2 md:table-cell px-4 py-2 whitespace-nowrap"><span className="font-bold md:hidden text-gray-700">Date</span> {transaction.txnDate}</td>
                   <td className="flex justify-start gap-2 md:table-cell px-4 py-2"><span className="font-bold md:hidden text-gray-700">Account</span>{transaction.accountName}</td>
                   <td className="flex justify-start gap-2 md:table-cell px-4 py-2"><span className="font-bold md:hidden text-gray-700">Detail</span>{transaction.description}</td>
                   <td className="flex justify-start gap-2 md:table-cell px-4 py-2"><span className="font-bold md:hidden text-gray-700">Amount</span>{formatCurrency(transaction.amount)}</td>
@@ -206,9 +230,12 @@ export default function TransactionSearchPage() {
 
       {queryResult.hasMore ? (
         <div style={{ padding: '1rem' }}>
-          <button className="link-button" onClick={handleLoadMore} disabled={loadingMore}>
+          {/* <button className="link-button" onClick={handleLoadMore} disabled={loadingMore}>
             {loadingMore ? 'Loading more...' : 'Load more transactions'}
-          </button>
+          </button> */}
+          <div ref={loaderRef} style={{ height: "50px", textAlign: "center" }}>
+            {loadingMore ? 'Loading more...' : 'Load more transactions'}
+          </div>
         </div>
       ) : null}
     </div>

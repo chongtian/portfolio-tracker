@@ -74,7 +74,7 @@ export default function TransactionViewPage() {
           </div>
           <div>
             <dt>Transaction Date</dt>
-            <dd>{(new Date(transaction.txnDate)).toLocaleDateString()}</dd>
+            <dd>{transaction.txnDate}</dd>
           </div>
           <div>
             <dt>Account</dt>
