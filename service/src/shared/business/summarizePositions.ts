@@ -2,7 +2,7 @@ import { TransactWriteCommand, UpdateCommandInput } from "@aws-sdk/lib-dynamodb"
 import { getItemsByPK, getItemsByPKandSK, putItem, queryTable, sendCommand, TransactItems, updateItem } from "@shared/clients/dynamoDb";
 import { AccountEntity } from "@shared/models/account";
 import { PositionEntity } from "@shared/models/position";
-import { accountPartitionKey, EntityTypeAccount, EntityTypePosition, positionHistorySortKey, positionPartitionKey, summaryHistorySortKey, summaryPartitionKey, summarySortKey } from "@shared/utils/getKeys";
+import { accountPartitionKey, EntityTypeAccount, EntityTypePosition, positionHistorySortKey, positionPartitionKey, processedSortKey, summaryHistorySortKey, summaryPartitionKey, summarySortKey } from "@shared/utils/getKeys";
 import { getCurrentMarketPrice } from "@shared/utils/getMarketPrice";
 import { parseOptionContract } from "@shared/utils/parseOptionContract";
 import { expireOptionPosition } from "./expireOptionPosition";
@@ -11,22 +11,45 @@ import { SummaryEntity } from "@shared/models/summary";
 
 export const summarizePositions = async (userId: string, tableName: string, currentDate?: Date): Promise<Record<string, string>> => {
 
-    const messages: Record<string, string> = {};
+    const logs: Record<string, string> = {};
     const accounts = await getItemsByPK<AccountEntity>(accountPartitionKey(userId), tableName, EntityTypeAccount);
     currentDate = currentDate || new Date();
 
     const priceCache: Record<string, number> = {};
+
+    // check if other process has locked the table
+    const lockTable = {
+        PK: accountPartitionKey(userId),
+        SK: processedSortKey(),
+        createdAt: (new Date()).toISOString(),
+        event: 'summarize_positions',
+        isProcessing: true
+    }
+
+    try {
+
+        await putItem(lockTable, tableName, 'attribute_not_exists(isProcessing)');
+
+    } catch (error) {
+        if (error instanceof Error && error.name === "ConditionalCheckFailedException") {
+            logs['SYSTEM'] += '\nAnother process is summarizing positions. Skipping this process.';
+        } else {
+            console.error(error);
+            logs['SYSTEM'] += '\nFailed to summarize positions.';
+        }
+        return logs;
+    }
 
     for (const account of accounts) {
         const accountId = account.accountId;
         const accountName = account.accountName;
 
         if (account.active !== true) {
-            messages[accountId] = `Account ${accountName} is inactive, skipping`;
+            logs[accountId] = `Account ${accountName} is inactive, skipping`;
             continue;
         }
 
-        messages[accountId] = `Updating positions for account ${accountName}.`;
+        logs[accountId] = `Updating positions for account ${accountName}.`;
 
         // get all open positions for the account
         const param = {
@@ -42,11 +65,11 @@ export const summarizePositions = async (userId: string, tableName: string, curr
 
         const queryResult = await queryTable(param);
         const openPositions = queryResult.Items as PositionEntity[];
-        messages[accountId] += `\nFound ${openPositions.length} open positions.`;
+        logs[accountId] += `\nFound ${openPositions.length} open positions.`;
 
         for (const position of openPositions) {
             const instrumentId = position.instrumentId;
-            messages[accountId] += `\nUpdating position for instrument ${instrumentId}.`;
+            logs[accountId] += `\nUpdating position for instrument ${instrumentId}.`;
 
             // check if the instrument is an option contract and if the contract is expired
             const optionContract = parseOptionContract(instrumentId);
@@ -57,10 +80,10 @@ export const summarizePositions = async (userId: string, tableName: string, curr
                     try {
                         const expireOptionTransactItems = await expireOptionPosition(position, expirationDate.toISOString(), tableName);
                         await sendCommand(new TransactWriteCommand({ TransactItems: expireOptionTransactItems }));
-                        messages[accountId] += `\nOption ${instrumentId} has beend expired.`;
+                        logs[accountId] += `\nOption ${instrumentId} has beend expired.`;
                     } catch (error) {
                         console.error(`Failed to expire position ${position.PK}#${position.SK}:`, error);
-                        messages[accountId] += `\nFailed to expire position for instrument ${instrumentId}`;
+                        logs[accountId] += `\nFailed to expire position for instrument ${instrumentId}`;
                     }
 
                     continue;
@@ -77,11 +100,11 @@ export const summarizePositions = async (userId: string, tableName: string, curr
                 // messages[accountId] += `\nGetting market price for instrument ${instrumentId}.`;
                 let price = await getCurrentMarketPrice(instrumentId);
                 if (price) {
-                    messages[accountId] += `\nMarket price for instrument ${instrumentId} is ${price}`;
+                    logs[accountId] += `\nMarket price for instrument ${instrumentId} is ${price}`;
                 } else {
-                    messages[accountId] += `\nMarket price not available for instrument ${instrumentId}`;
+                    logs[accountId] += `\nMarket price not available for instrument ${instrumentId}`;
                     price = position.totalCost / position.quantity / getMultipler(instrumentId); // fallback to average cost if market price not available    
-                    messages[accountId] += `\nUsing average cost as market price for instrument ${instrumentId}: ${price}`;
+                    logs[accountId] += `\nUsing average cost as market price for instrument ${instrumentId}: ${price}`;
                 }
 
                 priceCache[instrumentId] = price;
@@ -108,17 +131,17 @@ export const summarizePositions = async (userId: string, tableName: string, curr
                     };
 
                     await updateItem(param);
-                    messages[accountId] += `\nPosition for instrument ${instrumentId} updated successfully`;
+                    logs[accountId] += `\nPosition for instrument ${instrumentId} updated successfully`;
 
                     // Save the Position as a Position History
                     position.SK = positionHistorySortKey(instrumentId, currentDate.toISOString().slice(0, 10));
                     position.asOfDate = currentDate.toISOString().slice(0, 10);
                     position.lastUpdated = (new Date()).toISOString();
-                    await putItem(position, tableName);                    
+                    await putItem(position, tableName);
 
                 } catch (error) {
                     console.error(`Failed to update position ${position.PK}#${position.SK}:`, error);
-                    messages[accountId] += `\nFailed to update position for instrument ${instrumentId}`;
+                    logs[accountId] += `\nFailed to update position for instrument ${instrumentId}`;
                 }
             }
         }
@@ -142,7 +165,7 @@ export const summarizePositions = async (userId: string, tableName: string, curr
                 }
             };
             await updateItem(updateSummaryParam);
-            messages[accountId] += `\nSummary updated successfully`;
+            logs[accountId] += `\nSummary updated successfully`;
 
             // Get the current Summary and save it as a Summary History
             const summaryItems = await getItemsByPKandSK<SummaryEntity>(summaryPartitionKey(userId, accountId), summarySortKey(), tableName);
@@ -156,10 +179,27 @@ export const summarizePositions = async (userId: string, tableName: string, curr
 
         } catch (error) {
             console.error(`Failed to update summary for account ${accountId}:`, error);
-            messages[accountId] += `\nFailed to update summary for account ${accountId}`;
+            logs[accountId] += `\nFailed to update summary for account ${accountId}`;
         }
     }
 
-    return messages;
+    // unlock
+    const unlockTable = {
+        PK: accountPartitionKey(userId),
+        SK: processedSortKey(),
+        createdAt: (new Date()).toISOString(),
+        event: 'summarize_positions'
+    }
+
+    try {
+
+        await putItem(unlockTable, tableName);
+
+    } catch (error) {
+        console.error(error);
+        logs['SYSTEM'] += '\nFailed to unlock table.';
+    }
+
+    return logs;
 
 }

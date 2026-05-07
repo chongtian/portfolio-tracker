@@ -23,7 +23,7 @@ export default function SummarizationPage() {
 
     triggerSummarization().then(
       messages => {
-        const message = ['Summarization triggered successfully.']
+        const message = ['Summarization has been triggered.']
         for (const [key, value] of Object.entries(messages)) {
           const msgs= value.split('\n').map(m=>`${accountMap.get(key)||'Unknown'}: ${m}`)
           message.push(...msgs)
