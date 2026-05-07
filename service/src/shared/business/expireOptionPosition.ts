@@ -5,6 +5,7 @@ import { AssetType, TransactionEntity, TransactionType } from "@shared/models/tr
 import { releaseCashCollateral } from "./transactionHandlers/releaseCashCollateral";
 import { EntityTypeLot, lotPartitionKey } from "@shared/utils/getKeys";
 import { PositionEntity } from "@shared/models/position";
+import { getMultipler } from "@shared/utils/getMultipler";
 
 export const expireOptionPosition = async (position: PositionEntity, expirationDate: string, tableName: string): Promise<TransactItems> => {
 
@@ -27,7 +28,7 @@ export const expireOptionPosition = async (position: PositionEntity, expirationD
 
     let releaseCollateral = 0;
     openLots.forEach(lot => {
-        lot.realizedPnl = -1 * lot.cost;
+        lot.realizedPnl = -1 * lot.cost * getMultipler(lot.instrumentId) ;
         releaseCollateral += lot.cashCollateral || 0;
         lot.cashCollateral = 0;
 

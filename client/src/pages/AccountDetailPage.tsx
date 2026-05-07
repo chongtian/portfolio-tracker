@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { fetchAccountDetail, fetchCashHistory } from '../services/api'
+import { fetchAccountDetail, fetchSummaryHistory } from '../services/api'
 import {
   Pie,
   PieChart,
@@ -18,7 +18,7 @@ import './PageStyles.css'
 import type { AccountDetail } from '../models/account'
 import { formatCurrency } from '../utils/formatCurrency'
 import { cleanUpPieData, pieChartColors } from '../utils/chartHelper'
-import type { CashEntity } from '../models/cash'
+import type { SummaryEntity } from '../models/summary'
 
 const chartColors = pieChartColors
 
@@ -28,7 +28,7 @@ export default function AccountDetailPage() {
   const entity = state?.account
 
   const [account, setAccount] = useState<AccountDetail | null>(entity)
-  const [cashHistory, setCashHistory] = useState<CashEntity[] | undefined>()
+  const [summaryHistory, setSummaryHistory] = useState<SummaryEntity[] | undefined>()
 
   useEffect(() => {
     if (!id) {
@@ -41,13 +41,14 @@ export default function AccountDetailPage() {
 
     const endDateStr = (new Date()).toISOString().slice(0, 10)
     const startDateStr = (new Date(new Date().setFullYear(new Date().getFullYear() - 1))).toISOString().slice(0, 10)
-    fetchCashHistory(id, startDateStr, endDateStr).then(data => {
-      setCashHistory(data.items.sort((a, b) => (a.asOfDate || '0000-00-00').localeCompare(b.asOfDate || '0000-00-00')))
+    const pageSize = 366
+    fetchSummaryHistory(id, startDateStr, endDateStr, pageSize).then(data => {
+      setSummaryHistory(data.items.sort((a, b) => (a.asOfDate || '0000-00-00').localeCompare(b.asOfDate || '0000-00-00')))
     }).catch(console.error)
 
   }, [entity, id])
 
-  const pieData = useMemo(() => {
+  const pieDataValue = useMemo(() => {
     if (!account) return []
 
     const positions = account.positions.map((position) => ({
@@ -61,40 +62,22 @@ export default function AccountDetailPage() {
     ], chartColors.length)
   }, [account])
 
-  const cashHistory1yr = cashHistory?.reduce<{ name: string; delta: number }[]>((acc, point) => {
-    const prev = acc.length ? acc[acc.length - 1].delta : 0;
-    acc.push({
-      name: point.asOfDate || '0000-00-00',
-      delta: prev + point.balance,
-    });
-    return acc;
-  }, [])
-  const cashHistoryYtd = cashHistory?.filter(h => (h.asOfDate || '0000-00-00') >= `${(new Date()).getFullYear()}-01-01`)
-    .reduce<{ name: string; delta: number }[]>((acc, point) => {
-      const prev = acc.length ? acc[acc.length - 1].delta : 0;
-      acc.push({
-        name: point.asOfDate || '0000-00-00',
-        delta: prev + point.balance,
-      });
-      return acc;
-    }, [])
-  const balHistory1yr = cashHistory?.reduce<{ name: string; delta: number }[]>((acc, point) => {
-    const prev = acc.length ? acc[acc.length - 1].delta : 0;
-    acc.push({
-      name: point.asOfDate || '0000-00-00',
-      delta: prev + (point.availableBalance || 0),
-    });
-    return acc;
-  }, [])
-  const balHistoryYtd = cashHistory?.filter(h => (h.asOfDate || '0000-00-00') >= `${(new Date()).getFullYear()}-01-01`)
-    .reduce<{ name: string; delta: number }[]>((acc, point) => {
-      const prev = acc.length ? acc[acc.length - 1].delta : 0;
-      acc.push({
-        name: point.asOfDate || '0000-00-00',
-        delta: prev + (point.availableBalance || 0),
-      });
-      return acc;
-    }, [])
+  const summaryHistory1yr = summaryHistory?.map(h => {
+    return {
+      name: h.asOfDate || '0000-00-00',
+      totalCash: h.totalCash,
+      totalAvailableCash: h.totalAvailableCash
+    }
+  })
+
+  const summaryHistoryYtd = summaryHistory?.filter(h => (h.asOfDate || '0000-00-00') >= `${(new Date()).getFullYear()}-01-01`)
+    .map(h => {
+      return {
+        name: h.asOfDate || '0000-00-00',
+        totalCash: h.totalCash,
+        totalAvailableCash: h.totalAvailableCash
+      }
+    })
 
   return (
     <div className="page">
@@ -160,9 +143,9 @@ export default function AccountDetailPage() {
               <h2>Value breakdown</h2>
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100}
+                  <Pie data={pieDataValue} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100}
                     label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} >
-                    {pieData.map((_, index) => (
+                    {pieDataValue.map((_, index) => (
                       <Cell key={`slice-${index}`} fill={chartColors[index % chartColors.length]} />
                     ))}
                   </Pie>
@@ -174,28 +157,28 @@ export default function AccountDetailPage() {
 
           <div className="chart-grid">
             <div className="chart-card">
-              <h2>Cash Change in 1 year</h2>
+              <h2>Cash History in 1 year</h2>
               <ResponsiveContainer width="100%" height={280}>
-                <LineChart data={cashHistory1yr} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
+                <LineChart data={summaryHistory1yr} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip formatter={(value) => formatCurrency(value ? parseFloat(value.toString()) : null)} />
                   <Legend />
-                  <Line type="monotone" dataKey="delta" stroke="#2563eb" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="totalCash" stroke="#2563eb" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
             <div className="chart-card">
-              <h2>Cash Change YTD</h2>
+              <h2>Cash History YTD</h2>
               <ResponsiveContainer width="100%" height={280}>
-                <LineChart data={cashHistoryYtd} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
+                <LineChart data={summaryHistoryYtd} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip formatter={(value) => formatCurrency(value ? parseFloat(value.toString()) : null)} />
                   <Legend />
-                  <Line type="monotone" dataKey="delta" stroke="#16a34a" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="totalCash" stroke="#16a34a" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -203,28 +186,28 @@ export default function AccountDetailPage() {
 
           <div className="chart-grid">
             <div className="chart-card">
-              <h2>Available Cash Change in 1 year</h2>
+              <h2>Available Cash History in 1 year</h2>
               <ResponsiveContainer width="100%" height={280}>
-                <LineChart data={balHistory1yr} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
+                <LineChart data={summaryHistory1yr} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip formatter={(value) => formatCurrency(value ? parseFloat(value.toString()) : null)} />
                   <Legend />
-                  <Line type="monotone" dataKey="delta" stroke="#2563eb" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="totalAvailableCash" stroke="#2563eb" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
             <div className="chart-card">
-              <h2>Available Cash Change YTD</h2>
+              <h2>Available Cash History YTD</h2>
               <ResponsiveContainer width="100%" height={280}>
-                <LineChart data={balHistoryYtd} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
+                <LineChart data={summaryHistoryYtd} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip formatter={(value) => formatCurrency(value ? parseFloat(value.toString()) : null)} />
                   <Legend />
-                  <Line type="monotone" dataKey="delta" stroke="#16a34a" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="totalAvailableCash" stroke="#16a34a" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

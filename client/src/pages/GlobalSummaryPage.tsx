@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchAccountDetails } from '../services/api'
+import { fetchAccountDetails, fetchPnL } from '../services/api'
 import type { GlobalDetail } from '../models/types'
 import {
   Pie,
@@ -17,11 +17,17 @@ import {
 import './PageStyles.css'
 import { formatCurrency } from '../utils/formatCurrency'
 import { cleanUpPieData, pieChartColors } from '../utils/chartHelper'
+import { useAccounts } from '../hooks/useAccounts'
+import type { PnLEntity } from '../models/pnl'
 
 const chartColors = pieChartColors
 
 export default function GlobalSummaryPage() {
   const [summary, setSummary] = useState<GlobalDetail | null>(null)
+  const [pnl, setPnl] = useState<PnLEntity[] | null>([])
+  const { state } = useAccounts()
+  const { accounts, loading } = state
+  if (loading) return <div>Loading...</div>
 
   useEffect(() => {
     fetchAccountDetails().then(details => {
@@ -64,6 +70,16 @@ export default function GlobalSummaryPage() {
 
     }).catch(console.error)
 
+    for (const account of accounts) {
+      if (account.accountType !== 'TAXABLE') continue
+
+      const endDateStr = (new Date()).toISOString().slice(0, 10)
+      const startDateStr = (new Date(new Date().setFullYear(new Date().getFullYear() - 1))).toISOString().slice(0, 10)
+      const pageSize = 366
+      fetchPnL(account.accountId, startDateStr, endDateStr, pageSize).then(data => {
+        setPnl(data.items)
+      }).catch(console.error)
+    }
   }, [])
 
   const pieDataValue = useMemo(() => {
@@ -139,6 +155,21 @@ export default function GlobalSummaryPage() {
               <h2>Unrealized PnL</h2>
               <div className="summary-value">{formatCurrency(summary.summary.unrealizedPnl)}</div>
             </div>
+
+            <div className="summary-card">
+              <h2>Realized PnL YTD</h2>
+              <div className="summary-value">{formatCurrency(
+                pnl?.filter(h => (h.closedDate || '0000-00-00') >= `${(new Date()).getFullYear()}-01-01`).reduce((sum, p) => sum = sum + p.realizedPnl, 0)
+              )}</div>
+            </div>
+
+            <div className="summary-card">
+              <h2>Realized PnL in one year</h2>
+              <div className="summary-value">{formatCurrency(
+                pnl?.reduce((sum, p) => sum = sum + p.realizedPnl, 0)
+              )}</div>
+            </div>
+
           </section>
 
           <section className="table-card">
