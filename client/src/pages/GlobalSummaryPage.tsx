@@ -20,7 +20,7 @@ import { cleanUpPieData, pieChartColors } from '../utils/chartHelper'
 
 const chartColors = pieChartColors
 
-export default function GlobalNetWorthPage() {
+export default function GlobalSummaryPage() {
   const [summary, setSummary] = useState<GlobalDetail | null>(null)
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export default function GlobalNetWorthPage() {
 
   }, [])
 
-  const pieData = useMemo(() => {
+  const pieDataValue = useMemo(() => {
     if (!summary) return []
 
     const positions = summary.positions.map((position) => ({
@@ -78,6 +78,28 @@ export default function GlobalNetWorthPage() {
       ...positions,
       { name: 'Cash', value: summary.summary.totalCash },
     ], chartColors.length)
+  }, [summary])
+
+  const pieDataUnrealizedProfit = useMemo(() => {
+    if (!summary) return []
+
+    const positions = summary.positions.filter(p => (p.unrealizedPnl || 0) > 0).map((position) => ({
+      name: position.instrumentId,
+      value: position.unrealizedPnl,
+    }))
+
+    return cleanUpPieData(positions, chartColors.length)
+  }, [summary])
+
+  const pieDataUnrealizedLoss = useMemo(() => {
+    if (!summary) return []
+
+    const positions = summary.positions.filter(p => (p.unrealizedPnl || 0) < 0).map((position) => ({
+      name: position.instrumentId,
+      value: position.unrealizedPnl,
+    }))
+
+    return cleanUpPieData(positions, chartColors.length)
   }, [summary])
 
   // const cashHistory = summary?.cashHistory?.map((point) => ({ name: point.date, value: point.value })) ?? [
@@ -92,8 +114,7 @@ export default function GlobalNetWorthPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1>Global net worth</h1>
-          <p>View aggregated portfolio status across all accounts.</p>
+          <h1>Global Summary</h1>
         </div>
       </div>
 
@@ -149,9 +170,9 @@ export default function GlobalNetWorthPage() {
               <h2>Value breakdown</h2>
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100}
+                  <Pie data={pieDataValue} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100}
                     label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} >
-                    {pieData.map((_, index) => (
+                    {pieDataValue.map((_, index) => (
                       <Cell key={`slice-${index}`} fill={chartColors[index % chartColors.length]} />
                     ))}
                   </Pie>
@@ -159,19 +180,39 @@ export default function GlobalNetWorthPage() {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            {/* <div className="chart-card">
-              <h2>Cash history</h2>
+          </div>
+
+          <div className="chart-grid">
+            <div className="chart-card">
+              <h2>Unrealized Profit breakdown</h2>
               <ResponsiveContainer width="100%" height={280}>
-                <LineChart data={cashHistory} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={2} dot={false} />
-                </LineChart>
+                <PieChart>
+                  <Pie data={pieDataUnrealizedProfit} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} >
+                    {pieDataUnrealizedProfit.map((_, index) => (
+                      <Cell key={`slice-${index}`} fill={chartColors[index % chartColors.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => formatCurrency(value ? parseFloat(value.toString()) : null)} />
+                </PieChart>
               </ResponsiveContainer>
-            </div> */}
+            </div>
+          </div>
+          <div className="chart-grid">
+            <div className="chart-card">
+              <h2>Unrealized Loss breakdown</h2>
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie data={pieDataUnrealizedLoss} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} >
+                    {pieDataUnrealizedLoss.map((_, index) => (
+                      <Cell key={`slice-${index}`} fill={chartColors[index % chartColors.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => formatCurrency(value ? parseFloat(value.toString()) : null)} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           {/* <div className="chart-grid">
