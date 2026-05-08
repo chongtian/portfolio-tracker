@@ -1,6 +1,5 @@
 import { API_BASE_URL } from '../config';
 import type { AccountDetail, AccountEntity } from '../models/account';
-import type { CashEntity } from '../models/cash';
 import type { PnLEntity } from '../models/pnl';
 import type { SummaryEntity } from '../models/summary';
 import type { TransactionEntity } from '../models/transaction';
@@ -190,24 +189,3 @@ export async function fetchPnL(
   return jsonRequest(`/account/${accountId}/realizedpnl${query ? `?${query}` : ''}`)
 }
 
-// this function will be removed
-export async function fetchCashHistory(accountId: string, startDate?: string | undefined, endDate?: string | undefined):
-  Promise<QueryResult<CashEntity>> {
-
-  const pageSize = 366;
-
-  const params = new URLSearchParams()
-  if (startDate) {
-    params.append('startDate', startDate)
-  }
-  if (endDate) {
-    params.append('endDate', endDate)
-  }
-
-  if (pageSize !== undefined) {
-    params.append('pageSize', String(pageSize))
-  }
-
-  const query = params.toString()
-  return jsonRequest(`/account/${accountId}/history/cash${query ? `?${query}` : ''}`)
-}
