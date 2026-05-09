@@ -1,6 +1,8 @@
 import { TransactItems } from "@shared/clients/dynamoDb";
 import { TransactionEntity, TransactionType } from "@shared/models/transaction";
 import { lotPartitionKey, lotSortKey, EntityTypeLot } from "@shared/utils/getKeys";
+import { getMultipler } from "@shared/utils/getMultipler";
+import { preciseRound } from "@shared/utils/mathHelper";
 import { ulid } from "ulid";
 
 ///** * Creates a new lot for a given transaction. 
@@ -28,9 +30,9 @@ export const createLot = async (txn: TransactionEntity, tableName: string, lotId
         accountId: txn.accountId,
         instrumentId: txn.instrumentId,
         openTransactionSK: txn.SK,
-        openQuantity: qty,
-        cost: qty * txn.price! + (txn.fees || 0),
-        remainingQuantity: qty,
+        openQuantity: preciseRound(qty),
+        cost: preciseRound((qty * txn.price! + (txn.fees || 0)) * getMultipler(txn.instrumentId)),
+        remainingQuantity: preciseRound(qty),
         openPrice: txn.price,
         realizedPnl: 0,
         feesAllocated: txn.fees || 0,

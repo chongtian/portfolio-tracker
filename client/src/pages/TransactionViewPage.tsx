@@ -59,9 +59,6 @@ export default function TransactionViewPage() {
         <div>
           <h1>Transaction details</h1>
         </div>
-        <button type="button" className="danger-button" onClick={handleDelete}>
-          Delete transaction
-        </button>
       </div>
 
       {error && <div className="form-error">{error}</div>}
@@ -135,6 +132,12 @@ export default function TransactionViewPage() {
             <dd>{transaction.createdAt}</dd>
           </div>
         </dl>
+      </div>
+
+      <div className="page-footer">
+        <button type="button" className="danger-button" onClick={handleDelete}>
+          Delete transaction
+        </button>
       </div>
     </div>
   )

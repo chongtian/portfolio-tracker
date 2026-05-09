@@ -19,9 +19,6 @@ export default function Header() {
 
   return (
     <header className="relative bg-white border-b border-gray-200 px-4 py-3 flex justify-between items-center">
-      <div className="flex flex-col">
-        <div className="text-lg font-bold">Portfolio Tracker</div>
-      </div>
 
       <button
         className="md:hidden bg-gray-100 p-2 rounded flex flex-col space-y-1"
@@ -33,6 +30,10 @@ export default function Header() {
         <span className="w-6 h-1 bg-gray-600"></span>
         <span className="w-6 h-1 bg-gray-600"></span>
       </button>
+
+      <div className="flex flex-col">
+        <div className="text-lg font-bold">Portfolio Tracker</div>
+      </div>
 
       <nav
         className={[
@@ -59,9 +60,9 @@ export default function Header() {
         <NavLink
           onClick={() => setMenuOpen(false)}
           className={({ isActive }) => `block py-2 px-3 rounded-lg ${isActive ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100'}`}
-          to="/net-worth"
+          to="/globalsummary"
         >
-          Global Net Worth
+          Global Summary
         </NavLink>
         <NavLink
           onClick={() => setMenuOpen(false)}

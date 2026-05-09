@@ -8,7 +8,7 @@ import AccountListPage from './pages/AccountListPage'
 import AccountCreatePage from './pages/AccountCreatePage'
 import AccountDetailPage from './pages/AccountDetailPage'
 import AccountEditPage from './pages/AccountEditPage'
-import GlobalNetWorthPage from './pages/GlobalNetWorthPage'
+import GlobalSummaryPage from './pages/GlobalSummaryPage'
 import TransactionCreatePage from './pages/TransactionCreatePage'
 import TransactionSearchPage from './pages/TransactionSearchPage'
 import TransactionViewPage from './pages/TransactionViewPage'
@@ -51,7 +51,7 @@ function App() {
               <Route path="accounts/new" element={<AccountCreatePage />} />
               <Route path="accounts/:id" element={<AccountDetailPage />} />
               <Route path="accounts/:id/edit" element={<AccountEditPage />} />
-              <Route path="net-worth" element={<GlobalNetWorthPage />} />
+              <Route path="globalsummary" element={<GlobalSummaryPage />} />
               <Route path="transactions/new" element={<TransactionCreatePage />} />
               <Route path="transactions" element={<TransactionSearchPage />} />
               <Route path="transactions/:id" element={<TransactionViewPage />} />

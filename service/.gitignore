@@ -1,1 +1,1 @@
-src/migration/copy-dynamodb-table.js
+**/*.js

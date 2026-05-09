@@ -45,7 +45,12 @@ function getTransactionPreview(txn: TransactionEntity, accountMap: Map<string, s
 
   if (txn.assetType === 'OPTION') {
     txnPreview.description = `${txn.transactionType} ${txn.quantity} contract of ${txn.instrumentId} at ${txn.price}`
-    txnPreview.amount = (txn.amount || 0) * OptionMultipler
+    // some records from migration has the amount already multiplied by 100
+    if ((txn.price || 0) * (txn.quantity || 0) === txn.amount) {
+      txnPreview.amount = (txn.amount || 0) * OptionMultipler
+    } else {
+      txnPreview.amount = txn.amount || 0
+    }
   }
 
   if (txn.assetType === 'CASH') {
@@ -115,8 +120,8 @@ export default function TransactionSearchPage() {
   //   await loadTransactions(queryResult.nextToken, true)
   // }
 
-  
-useEffect(() => {
+
+  useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {

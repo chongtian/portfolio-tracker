@@ -1,4 +1,3 @@
-import type { CashEntity } from "./cash";
 import type { PnLEntity } from "./pnl";
 import type { PositionEntity } from "./position";
 import type { SummaryEntity } from "./summary";
@@ -23,7 +22,6 @@ export interface AccountDetail {
   account: AccountEntity;
   summary: SummaryEntity;
   positions: PositionEntity[];
-  cashHistory: CashEntity[];
   summaryHistory: SummaryEntity[];
   pnlHistory: PnLEntity[];
 }
