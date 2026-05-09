@@ -52,7 +52,7 @@ export default function GlobalSummaryPage() {
         ret.summary.totalPositionsValue += account.summary.totalPositionsValue
         ret.summary.unrealizedPnl += account.summary.unrealizedPnl
 
-        for (const position of account.positions) {
+        for (const position of account.positions.filter(p => Math.round(Math.abs(p.quantity) * 10000) > 0)) {
           const existing = ret.positions.find(p => p.instrumentId === position.instrumentId)
           if (existing) {
             existing.quantity += position.quantity
@@ -118,6 +118,14 @@ export default function GlobalSummaryPage() {
     return cleanUpPieData(positions, chartColors.length)
   }, [summary])
 
+  const pnlYtd = useMemo(() => {
+    return pnl?.filter(h => (h.closedDate || '0000-00-00') >= `${(new Date()).getFullYear()}-01-01`).reduce((sum, p) => sum = sum + p.realizedPnl, 0)
+  }, [pnl])
+
+  const pnl1yr = useMemo(()=>{
+    return pnl?.reduce((sum, p) => sum = sum + p.realizedPnl, 0)
+  }, [pnl])
+
   // const cashHistory = summary?.cashHistory?.map((point) => ({ name: point.date, value: point.value })) ?? [
   //   { name: 'Current', value: summary?.availableCash ?? 0 },
   // ]
@@ -158,16 +166,12 @@ export default function GlobalSummaryPage() {
 
             <div className="summary-card">
               <h2>Realized PnL YTD</h2>
-              <div className="summary-value">{formatCurrency(
-                pnl?.filter(h => (h.closedDate || '0000-00-00') >= `${(new Date()).getFullYear()}-01-01`).reduce((sum, p) => sum = sum + p.realizedPnl, 0)
-              )}</div>
+              <div className="summary-value">{formatCurrency(pnlYtd)}</div>
             </div>
 
             <div className="summary-card">
               <h2>Realized PnL in one year</h2>
-              <div className="summary-value">{formatCurrency(
-                pnl?.reduce((sum, p) => sum = sum + p.realizedPnl, 0)
-              )}</div>
+              <div className="summary-value">{formatCurrency(pnl1yr)}</div>
             </div>
 
           </section>

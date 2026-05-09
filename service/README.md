@@ -129,29 +129,6 @@ Attributes:
 - realizedPnl
 - feesAllocated
 
-### Cash Balance
-Stores the latest cash balance and history of cash balances
-
-Attributes:
-- PK: USER#<user_id>#ACCOUNT#<account_id>
-- SK: CASH or CASH#<as_of_date>
-- entityType: "CASH"
-- createdAt: IsoString
-- balance
-- availableBalance?
-- asOfDate?: only used in history
-- lastUpdated: IsoString
-
-#### Notes
-- SK = CASH: used to get the latest (current) cash balance
-- SK = CASH#<as_of_date>: used to get the history of cash balance
-- balance: 
-  - for SK = CASH, this is the actual balance 
-  - for SK = CASH#<as_of_date>, this is the delta occurred in that day
-- availableBalance: balance minus cash collateral
-  - for SK = CASH, this is the actual value 
-  - for SK = CASH#<as_of_date>, this is the delta occurred in that day 
-
 ### Account Summary
 Store summary of an account
 
@@ -186,12 +163,11 @@ Attributes:
 3. If any Lots are closed, 
    - create Pnl (realized Profit and Loss) from the Lots
    - update Position to remove the closed quantity from the Lots
-   - update the total portfolio value on Summary and Global Net Worth
+   - update the total portfolio value on Summary 
 4. If a Lot is created, 
    - create or update Position to add quantity from the new Lot
-   - update the total portfolio value on Summary and Global Net Worth as well as the history
-5. Update balance on Cash and Cash Histroy
-6. Update cash value on Summary and Global Net Worth as well as the history
+   - update the total portfolio value on Summary as well as the history
+5. Update cash value on Summary  as well as the history
 
 ### Sell
 1. a SELL transaction is created
@@ -201,12 +177,11 @@ Attributes:
 3. If any Lots are closed, 
    - create Pnl (realized Profit and Loss) from the Lots
    - update Position to remove the closed quantity from the Lots
-   - update the total portfolio value on Summary and Global Net Worth
+   - update the total portfolio value on Summary 
 4. If a Lot is created, 
    - create or update Position to add quantity from the new Lot
-   - update the total portfolio value on Summary and Global Net Worth as well as the history
-5. Update balance on Cash and Cash Histroy
-6. Update cash value on Summary and Global Net Worth as well as the history
+   - update the total portfolio value on Summary as well as the history
+5. Update cash value on Summary  as well as the history
 
 ### Dividend
 DIVIDEND transactions contain the total amount of dividends generated from a position in an account. The quantity and price of a DIVIDEND transaction are ignored by the system.  
@@ -216,14 +191,12 @@ DIVIDEND transactions contain the total amount of dividends generated from a pos
    - Dividends become the realized PnL on the Lots
 3. create Pnl (realized Profit and Loss) from the Lots
 4. update position to include the dividends
-5. Update balance on Cash and Cash Histroy
-6. Update cash value on Summary and Global Net Worth as well as the history
+5. Update cash value on Summary as well as the history
 
 ### Cash
-Cash transactions include DEPOSIT, WITHDRAW, INTEREST, ADJUST. These transactions do not touch Lots, Positions, and PnL. They only update the cash values on Cash, Summary, and Global Net Worth.
+Cash transactions include DEPOSIT, WITHDRAW, INTEREST, ADJUST. These transactions do not touch Lots, Positions, and PnL. They only update the cash values on Cash, Summary, .
 1. a CASH transaction is created
-2. Update balance on Cash and Cash Histroy
-3. Update cash value on Summary and Global Net Worth as well as the history
+2. Update cash value on Summary as well as the history
 
 ### Delete a Transaction
 When deleting a transaction, the transaction would be deleted, and the system would reverse the derivation of the transaction. The system will use the opposite values of the transaction to re-run BUY, SELL, DIVIDEND, and CASH workflows.
@@ -234,16 +207,15 @@ Regardless the outcome of an option contract is expired, executed, or assigned, 
 2. close the Lots. For Short Lots, realized profit and loss would be generated.
 3. close the Position
 4. If there is realized profit and loss, create PnL
-5. update the total portfolio value on Summary and Global Net Worth as well as the history
-6. Update balance on Cash and Cash Histroy
-7. Update cash value on Summary and Global Net Worth as well as the history
+5. update the total portfolio value on Summary  as well as the history
+6. Update cash value on Summary as well as the history
 
 
 ## Lambda Functions
 - saveAccountHandler
 - createTransactionHandler
 - deleteTransactionHandler
-- getNetWorthHandler
+- getTransactionHandler
 - getSummaryHandler
 - listAccountsHandler
 - listHistoryHandler
@@ -277,7 +249,6 @@ GET|/transaction/{sk}|get a single transaction, sk is the sort key of the transa
 GET|/account/{accountId}/positions|return a list of positions of the given account
 GET|/account/{accountId}/realizedpnl?startDate=&endDate=&pageSize=nextToken=|return a list of realized pnl of the given account
 GET|/account/{accountId}/summary|get the summary of the given account
-GET|/account/{accountId}/history/cash?startDate=&endDate=&pageSize=nextToken=|return a list of cash history
 GET|/account/{accountId}/history/summary?startDate=&endDate=&pageSize=nextToken=|return a list of account summary history
 POST|/summarize-position|Retrieve market prices and update Positions, no payload is required
        

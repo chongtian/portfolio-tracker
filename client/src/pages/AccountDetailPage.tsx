@@ -51,7 +51,7 @@ export default function AccountDetailPage() {
   const pieDataValue = useMemo(() => {
     if (!account) return []
 
-    const positions = account.positions.map((position) => ({
+    const positions = account.positions.filter(p => Math.round(Math.abs(p.quantity) * 10000) > 0).map((position) => ({
       name: position.instrumentId,
       value: position.marketValue,
     }))
@@ -70,14 +70,16 @@ export default function AccountDetailPage() {
     }
   })
 
-  const summaryHistoryYtd = summaryHistory?.filter(h => (h.asOfDate || '0000-00-00') >= `${(new Date()).getFullYear()}-01-01`)
-    .map(h => {
-      return {
-        name: h.asOfDate || '0000-00-00',
-        totalCash: h.totalCash,
-        totalAvailableCash: h.totalAvailableCash
-      }
-    })
+  const summaryHistoryYtd = useMemo(() => {
+    return summaryHistory?.filter(h => (h.asOfDate || '0000-00-00') >= `${(new Date()).getFullYear()}-01-01`)
+      .map(h => {
+        return {
+          name: h.asOfDate || '0000-00-00',
+          totalCash: h.totalCash,
+          totalAvailableCash: h.totalAvailableCash
+        }
+      })
+  }, [summaryHistory])
 
   return (
     <div className="page">
@@ -126,7 +128,7 @@ export default function AccountDetailPage() {
                 </tr>
               </thead>
               <tbody>
-                {account.positions.map((position) => (
+                {account.positions.filter(p => Math.round(Math.abs(p.quantity) * 10000) > 0).map((position) => (
                   <tr key={position.instrumentId}>
                     <td>{position.instrumentId}</td>
                     <td>{position.quantity}</td>
