@@ -10,12 +10,12 @@ on:
       - '.github/**'
   # Allows you to run this workflow manually from the Actions tab on GitHub.
   workflow_dispatch:
-  inputs:
-    deploy_prod:
-      description: 'Deploy to Production'
-      required: true
-      type: boolean
-      default: false
+    inputs:
+      deploy_prod:
+        description: 'Deploy to Production'
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   deploy-dev:
