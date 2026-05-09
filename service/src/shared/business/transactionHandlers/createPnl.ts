@@ -1,7 +1,8 @@
 import { TransactItems } from "@shared/clients/dynamoDb";
 import { LotEntity } from "@shared/models/lot";
 import { TransactionEntity } from "@shared/models/transaction";
-import { EntityTypeLot, pnlPartitionKey, pnlSortKey } from "@shared/utils/getKeys";
+import { EntityTypeLot, EntityTypePnL, pnlPartitionKey, pnlSortKey } from "@shared/utils/getKeys";
+import { preciseRound } from "@shared/utils/mathHelper";
 
 ///** * Create PnL record when closing a lot
 // * @param lot the lot being closed
@@ -15,17 +16,17 @@ export const createPnl = (lot: LotEntity, txn: TransactionEntity, tableName: str
         PK: pnlPartitionKey(lot.userId, lot.accountId),
         SK: pnlSortKey(txn.txnDate, lot.instrumentId, lot.lotId),
         createdAt: new Date().toISOString(),
-        entityType: EntityTypeLot,
+        entityType: EntityTypePnL,
         userId: lot.userId,
         accountId: lot.accountId,
         instrumentId: lot.instrumentId,
         closedLotSK: lot.SK,
         closedTxnSK: txn.SK,
         closedDate: txn.txnDate,
-        quantityClosed: lot.openQuantity- lot.remainingQuantity,
+        quantityClosed: preciseRound(lot.openQuantity - lot.remainingQuantity),
         openPrice: lot.openPrice,
         closePrice: txn.price!,
-        realizedPnl: lot.realizedPnl,
+        realizedPnl: preciseRound(lot.realizedPnl),
         feesAllocated: lot.feesAllocated
     };
 

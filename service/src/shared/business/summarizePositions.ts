@@ -8,6 +8,7 @@ import { parseOptionContract } from "@shared/utils/parseOptionContract";
 import { expireOptionPosition } from "./expireOptionPosition";
 import { getMultipler } from "@shared/utils/getMultipler";
 import { SummaryEntity } from "@shared/models/summary";
+import { preciseRound } from "@shared/utils/mathHelper";
 
 export const summarizePositions = async (userId: string, tableName: string, currentDate?: Date): Promise<Record<string, string>> => {
 
@@ -113,8 +114,8 @@ export const summarizePositions = async (userId: string, tableName: string, curr
 
             if (position.marketPrice) {
                 try {
-                    position.marketValue = position.marketPrice * position.quantity * getMultipler(instrumentId);
-                    position.unrealizedPnl = position.marketValue - position.totalCost;
+                    position.marketValue = preciseRound(position.marketPrice * position.quantity * getMultipler(instrumentId)) || 0;
+                    position.unrealizedPnl = preciseRound(position.marketValue - position.totalCost) || 0;
 
                     const param: UpdateCommandInput = {
                         TableName: tableName,
@@ -148,8 +149,8 @@ export const summarizePositions = async (userId: string, tableName: string, curr
 
         // update Summary
         try {
-            const totalPositionsValue = openPositions.reduce((sum, pos) => sum + (pos.marketValue || 0), 0);
-            const totalUnrealizedPnl = openPositions.reduce((sum, pos) => sum + (pos.unrealizedPnl || 0), 0);
+            const totalPositionsValue = preciseRound(openPositions.reduce((sum, pos) => sum + (pos.marketValue || 0), 0));
+            const totalUnrealizedPnl = preciseRound(openPositions.reduce((sum, pos) => sum + (pos.unrealizedPnl || 0), 0));
 
             // Update the current Summary
             const updateSummaryParam: UpdateCommandInput = {

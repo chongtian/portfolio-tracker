@@ -5,7 +5,7 @@ import { AssetType, TransactionEntity, TransactionType } from "@shared/models/tr
 import { releaseCashCollateral } from "./transactionHandlers/releaseCashCollateral";
 import { EntityTypeLot, lotPartitionKey } from "@shared/utils/getKeys";
 import { PositionEntity } from "@shared/models/position";
-import { getMultipler } from "@shared/utils/getMultipler";
+import { preciseRound } from "@shared/utils/mathHelper";
 
 export const expireOptionPosition = async (position: PositionEntity, expirationDate: string, tableName: string): Promise<TransactItems> => {
 
@@ -28,7 +28,7 @@ export const expireOptionPosition = async (position: PositionEntity, expirationD
 
     let releaseCollateral = 0;
     openLots.forEach(lot => {
-        lot.realizedPnl = -1 * lot.cost * getMultipler(lot.instrumentId) ;
+        lot.realizedPnl = -1 * lot.cost;
         releaseCollateral += lot.cashCollateral || 0;
         lot.cashCollateral = 0;
 
@@ -67,7 +67,7 @@ export const expireOptionPosition = async (position: PositionEntity, expirationD
         transactItems.push(...pnlCreate);
     });
 
-    const totalRealizedPnl = openLots.reduce((sum, lot) => sum + (lot.realizedPnl || 0), 0);
+    const totalRealizedPnl = preciseRound(openLots.reduce((sum, lot) => sum + (lot.realizedPnl || 0), 0));
 
     transactItems.push({
         Update: {

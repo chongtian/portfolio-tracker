@@ -2,6 +2,7 @@ import { queryTable, TransactItems } from "@shared/clients/dynamoDb";
 import { LotEntity } from "@shared/models/lot";
 import { TransactionEntity, TransactionType } from "@shared/models/transaction";
 import { lotPartitionKey, EntityTypeLot, positionSortKey, positionPartitionKey, EntityTypePosition } from "@shared/utils/getKeys";
+import { preciseRound } from "@shared/utils/mathHelper";
 
 export const dividendTransactionHandler = async (userId: string, accountId: string, tableName: string, txn: TransactionEntity): Promise<TransactItems> => {
 
@@ -28,7 +29,7 @@ export const dividendTransactionHandler = async (userId: string, accountId: stri
     const totalRemainingQty = openLots.reduce((sum, lot) => sum + (lot.remainingQuantity || 0), 0);
     const updateLotsPlan: LotEntity[] = [];
     openLots.forEach(lot => {
-        lot.realizedPnl = (lot.realizedPnl || 0) + (lot.remainingQuantity || 0) / totalRemainingQty * (txn.amount || 0);
+        lot.realizedPnl = preciseRound((lot.realizedPnl || 0) + (lot.remainingQuantity || 0) / totalRemainingQty * (txn.amount || 0)) || 0;
         updateLotsPlan.push(lot);
     });
 
@@ -46,7 +47,7 @@ export const dividendTransactionHandler = async (userId: string, accountId: stri
         });
     });
 
-    const totalRealizedPnl = openLots.reduce((sum, lot) => sum + (lot.realizedPnl || 0), 0);
+    const totalRealizedPnl = preciseRound(openLots.reduce((sum, lot) => sum + (lot.realizedPnl || 0), 0));
     transactItems.push({
         Update: {
             TableName: tableName,
