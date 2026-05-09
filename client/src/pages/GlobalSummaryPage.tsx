@@ -2,11 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { fetchAccountDetails, fetchPnL } from '../services/api'
 import type { GlobalDetail } from '../models/types'
 import {
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  Cell,
+  Pie, PieChart, ResponsiveContainer, Tooltip, Cell,
   // Line,
   // LineChart,
   // XAxis,
@@ -69,18 +65,22 @@ export default function GlobalSummaryPage() {
       setSummary(ret)
 
     }).catch(console.error)
-
-    for (const account of accounts) {
-      if (account.accountType !== 'TAXABLE') continue
-
-      const endDateStr = (new Date()).toISOString().slice(0, 10)
-      const startDateStr = (new Date(new Date().setFullYear(new Date().getFullYear() - 1))).toISOString().slice(0, 10)
-      const pageSize = 366
-      fetchPnL(account.accountId, startDateStr, endDateStr, pageSize).then(data => {
-        setPnl(data.items)
-      }).catch(console.error)
-    }
   }, [])
+
+  useEffect(() => {
+    const endDateStr = (new Date()).toISOString().slice(0, 10)
+    const startDateStr = (new Date(new Date().setFullYear(new Date().getFullYear() - 1))).toISOString().slice(0, 10)
+    const pageSize = 366
+    const taxableAccounts = accounts.filter(a => a.accountType === 'TAXABLE')
+    const fetchPromises = taxableAccounts.map(a =>
+      fetchPnL(a.accountId, startDateStr, endDateStr, pageSize)
+    )
+    const results = Promise.all(fetchPromises)
+    results.then(items => {
+      setPnl(items.flatMap(res => res.items ?? []))
+    }).catch(console.error)
+
+  }, [accounts])
 
   const pieDataValue = useMemo(() => {
     if (!summary) return []
@@ -122,7 +122,7 @@ export default function GlobalSummaryPage() {
     return pnl?.filter(h => (h.closedDate || '0000-00-00') >= `${(new Date()).getFullYear()}-01-01`).reduce((sum, p) => sum = sum + p.realizedPnl, 0)
   }, [pnl])
 
-  const pnl1yr = useMemo(()=>{
+  const pnl1yr = useMemo(() => {
     return pnl?.reduce((sum, p) => sum = sum + p.realizedPnl, 0)
   }, [pnl])
 

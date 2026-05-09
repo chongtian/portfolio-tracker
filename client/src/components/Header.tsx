@@ -60,7 +60,7 @@ export default function Header() {
         <NavLink
           onClick={() => setMenuOpen(false)}
           className={({ isActive }) => `block py-2 px-3 rounded-lg ${isActive ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100'}`}
-          to="/net-worth"
+          to="/globalsummary"
         >
           Global Summary
         </NavLink>

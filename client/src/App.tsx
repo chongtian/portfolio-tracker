@@ -51,7 +51,7 @@ function App() {
               <Route path="accounts/new" element={<AccountCreatePage />} />
               <Route path="accounts/:id" element={<AccountDetailPage />} />
               <Route path="accounts/:id/edit" element={<AccountEditPage />} />
-              <Route path="net-worth" element={<GlobalSummaryPage />} />
+              <Route path="globalsummary" element={<GlobalSummaryPage />} />
               <Route path="transactions/new" element={<TransactionCreatePage />} />
               <Route path="transactions" element={<TransactionSearchPage />} />
               <Route path="transactions/:id" element={<TransactionViewPage />} />

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { fetchAccountDetail, fetchSummaryHistory } from '../services/api'
+import { fetchAccountDetail, fetchPnL, fetchSummaryHistory } from '../services/api'
 import {
   Pie,
   PieChart,
@@ -19,6 +19,7 @@ import type { AccountDetail } from '../models/account'
 import { formatCurrency } from '../utils/formatCurrency'
 import { cleanUpPieData, pieChartColors } from '../utils/chartHelper'
 import type { SummaryEntity } from '../models/summary'
+import type { PnLEntity } from '../models/pnl'
 
 const chartColors = pieChartColors
 
@@ -29,6 +30,7 @@ export default function AccountDetailPage() {
 
   const [account, setAccount] = useState<AccountDetail | null>(entity)
   const [summaryHistory, setSummaryHistory] = useState<SummaryEntity[] | undefined>()
+  const [pnl, setPnl] = useState<PnLEntity[] | null>([])
 
   useEffect(() => {
     if (!id) {
@@ -47,6 +49,16 @@ export default function AccountDetailPage() {
     }).catch(console.error)
 
   }, [entity, id])
+
+  useEffect(() => {
+    const endDateStr = (new Date()).toISOString().slice(0, 10)
+    const startDateStr = (new Date(new Date().setFullYear(new Date().getFullYear() - 1))).toISOString().slice(0, 10)
+    const pageSize = 366
+    fetchPnL((id ?? account?.accountId) ?? 'unk', startDateStr, endDateStr, pageSize).then(items => {
+      setPnl(items.items ?? [])
+    }).catch(console.error)
+
+  }, [id, account])
 
   const pieDataValue = useMemo(() => {
     if (!account) return []
@@ -81,6 +93,14 @@ export default function AccountDetailPage() {
       })
   }, [summaryHistory])
 
+  const pnlYtd = useMemo(() => {
+    return pnl?.filter(h => (h.closedDate || '0000-00-00') >= `${(new Date()).getFullYear()}-01-01`).reduce((sum, p) => sum = sum + p.realizedPnl, 0)
+  }, [pnl])
+
+  const pnl1yr = useMemo(() => {
+    return pnl?.reduce((sum, p) => sum = sum + p.realizedPnl, 0)
+  }, [pnl])
+
   return (
     <div className="page">
       <div className="page-header">
@@ -113,6 +133,14 @@ export default function AccountDetailPage() {
             <div className="summary-card">
               <h2>Unrealized PnL</h2>
               <div className="summary-value">{formatCurrency(account.summary.unrealizedPnl)}</div>
+            </div>
+            <div className="summary-card">
+              <h2>Realized PnL YTD</h2>
+              <div className="summary-value">{formatCurrency(pnlYtd)}</div>
+            </div>
+            <div className="summary-card">
+              <h2>Realized PnL in one year</h2>
+              <div className="summary-value">{formatCurrency(pnl1yr)}</div>
             </div>
           </section>
 
