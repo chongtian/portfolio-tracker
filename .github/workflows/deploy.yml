@@ -1,0 +1,63 @@
+name: AWS CDK Deployment
+
+on:
+  # Trigger the workflow every time you push to the `main` branch
+  # Using a different branch name? Replace `main` with your branch’s name
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**/README.md'
+      - '.github/**'
+  # Allows you to run this workflow manually from the Actions tab on GitHub.
+  workflow_dispatch:
+  inputs:
+    deploy_prod:
+      description: 'Deploy to Production'
+      required: true
+      type: boolean
+      default: false
+
+jobs:
+  deploy-dev:
+    name: Deploy Development
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Install Dependencies
+        run: |
+          cd service && npm ci
+          cd ../client && npm ci
+          cd ../infra && npm ci
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Deploy Dev Stage
+        working-directory: ./infra
+        run: npm run cdk-deploy:dev -- --require-approval never
+        env:
+          VITE_COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
+          VITE_COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
+          VITE_APP_VERSION: 0.1.${{ github.run_number }}        
+
+      - name: Deploy Prod Stage
+        if: |
+          github.ref == 'refs/heads/main' || 
+          github.event.inputs.deploy_prod == 'true'
+        working-directory: ./infra
+        run: npm run cdk-deploy:prod -- --require-approval never
+        env:
+          VITE_COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
+          VITE_COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
+          VITE_APP_VERSION: 0.1.${{ github.run_number }}        
