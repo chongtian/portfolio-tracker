@@ -192,10 +192,11 @@ export default function AccountDetailPage() {
                 <LineChart data={summaryHistory1yr} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
-                  <YAxis />
+                  <YAxis scale="log" domain={['auto', 'auto']} allowDataOverflow />
                   <Tooltip formatter={(value) => formatCurrency(value ? parseFloat(value.toString()) : null)} />
                   <Legend />
                   <Line type="monotone" dataKey="totalCash" stroke="#2563eb" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="totalAvailableCash" stroke="#16a34a" strokeWidth={2} dot={false} strokeDasharray="5 5" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -205,43 +206,15 @@ export default function AccountDetailPage() {
                 <LineChart data={summaryHistoryYtd} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
-                  <YAxis />
+                  <YAxis scale="log" domain={['auto', 'auto']} allowDataOverflow />
                   <Tooltip formatter={(value) => formatCurrency(value ? parseFloat(value.toString()) : null)} />
                   <Legend />
-                  <Line type="monotone" dataKey="totalCash" stroke="#16a34a" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="totalCash" stroke="#2563eb" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="totalAvailableCash" stroke="#16a34a" strokeWidth={2} dot={false} strokeDasharray="5 5" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
-          </div>
-
-          <div className="chart-grid">
-            <div className="chart-card">
-              <h2>Available Cash History in 1 year</h2>
-              <ResponsiveContainer width="100%" height={280}>
-                <LineChart data={summaryHistory1yr} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => formatCurrency(value ? parseFloat(value.toString()) : null)} />
-                  <Legend />
-                  <Line type="monotone" dataKey="totalAvailableCash" stroke="#2563eb" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="chart-card">
-              <h2>Available Cash History YTD</h2>
-              <ResponsiveContainer width="100%" height={280}>
-                <LineChart data={summaryHistoryYtd} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => formatCurrency(value ? parseFloat(value.toString()) : null)} />
-                  <Legend />
-                  <Line type="monotone" dataKey="totalAvailableCash" stroke="#16a34a" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+          </div>        
 
         </>
       )}
