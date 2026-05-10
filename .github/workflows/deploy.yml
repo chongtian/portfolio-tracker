@@ -54,7 +54,8 @@ jobs:
           VITE_COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
           VITE_COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
           VITE_APP_VERSION: 0.1.${{ github.run_number }}    
-          COGNITO_ISSUER_URL: ${{ secrets.COGNITO_ISSUER_URL }}     
+          COGNITO_ISSUER_URL: ${{ secrets.COGNITO_ISSUER_URL }}   
+          COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}  
           LAMBDA_ROLE_ARN: ${{ secrets.LAMBDA_ROLE_ARN }}  
           MARKETDATA_API_KEY: ${{ secrets.MARKETDATA_API_KEY }}  
           CLIENT_BASE_URL: ${{ secrets.CLIENT_BASE_URL }}  
@@ -69,7 +70,8 @@ jobs:
           VITE_COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
           VITE_COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
           VITE_APP_VERSION: 0.1.${{ github.run_number }}    
-          COGNITO_ISSUER_URL: ${{ secrets.COGNITO_ISSUER_URL }}     
+          COGNITO_ISSUER_URL: ${{ secrets.COGNITO_ISSUER_URL }}   
+          COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}    
           LAMBDA_ROLE_ARN: ${{ secrets.LAMBDA_ROLE_ARN }}  
           MARKETDATA_API_KEY: ${{ secrets.MARKETDATA_API_KEY }}  
           CLIENT_BASE_URL: ${{ secrets.CLIENT_BASE_URL }}        
