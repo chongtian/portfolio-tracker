@@ -53,7 +53,7 @@ jobs:
         env:
           VITE_COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
           VITE_COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
-          VITE_APP_VERSION: 0.1.${{ github.run_number }}    
+          VITE_APP_VERSION: 0.1.0_$(date +'%y%m%d').${{ github.run_number }}    
           COGNITO_ISSUER_URL: ${{ secrets.COGNITO_ISSUER_URL }}   
           COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}  
           LAMBDA_ROLE_ARN: ${{ secrets.LAMBDA_ROLE_ARN }}  
@@ -69,7 +69,7 @@ jobs:
         env:
           VITE_COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
           VITE_COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
-          VITE_APP_VERSION: 0.1.${{ github.run_number }}    
+          VITE_APP_VERSION: 0.1.0_$(date +'%y%m%d').${{ github.run_number }}    
           COGNITO_ISSUER_URL: ${{ secrets.COGNITO_ISSUER_URL }}   
           COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}    
           LAMBDA_ROLE_ARN: ${{ secrets.LAMBDA_ROLE_ARN }}  
