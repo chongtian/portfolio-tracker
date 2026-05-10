@@ -43,6 +43,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
 
+      - name: Build cdk
+        working-directory: ./infra
+        run: npm run cdk-build          
+
       - name: Deploy Dev Stage
         working-directory: ./infra
         run: npm run cdk-deploy:dev -- --require-approval never
