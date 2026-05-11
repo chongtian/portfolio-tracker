@@ -20,6 +20,7 @@ import { formatCurrency } from '../utils/formatCurrency'
 import { cleanUpPieData, pieChartColors } from '../utils/chartHelper'
 import type { SummaryEntity } from '../models/summary'
 import type { PnLEntity } from '../models/pnl'
+import { sortPositions } from '../utils/sortPositions'
 
 const chartColors = pieChartColors
 
@@ -38,7 +39,12 @@ export default function AccountDetailPage() {
     }
 
     if (!entity) {
-      fetchAccountDetail(id).then(setAccount).catch(console.error)
+      fetchAccountDetail(id).then(
+        data => {
+          data?.positions?.sort(sortPositions)
+          setAccount(data)
+        }
+      ).catch(console.error)
     }
 
     const endDateStr = (new Date()).toISOString().slice(0, 10)
@@ -214,7 +220,7 @@ export default function AccountDetailPage() {
                 </LineChart>
               </ResponsiveContainer>
             </div>
-          </div>        
+          </div>
 
         </>
       )}
