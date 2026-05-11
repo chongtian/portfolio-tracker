@@ -5,6 +5,7 @@ import './PageStyles.css'
 import type { AccountDetail } from '../models/account'
 import { formatCurrency } from '../utils/formatCurrency'
 import { useAccounts } from '../hooks/useAccounts'
+import { sortPositions } from '../utils/sortPositions'
 
 export default function AccountListPage() {
   const [accounts, setAccounts] = useState<AccountDetail[]>([])
@@ -15,6 +16,7 @@ export default function AccountListPage() {
       data => {
         if (data) {
           data.sort((a, b) => (b.summary.totalCash + b.summary.totalPositionsValue) - (a.summary.totalCash + a.summary.totalPositionsValue))
+          data?.forEach(d=>d.positions.sort(sortPositions))
           setAccounts(data)
           const accounts = data.map(d => {
             return d.account

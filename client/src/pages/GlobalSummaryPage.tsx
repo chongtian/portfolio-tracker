@@ -15,6 +15,7 @@ import { formatCurrency } from '../utils/formatCurrency'
 import { cleanUpPieData, pieChartColors } from '../utils/chartHelper'
 import { useAccounts } from '../hooks/useAccounts'
 import type { PnLEntity } from '../models/pnl'
+import { sortPositions } from '../utils/sortPositions'
 
 const chartColors = pieChartColors
 
@@ -61,6 +62,8 @@ export default function GlobalSummaryPage() {
           }
         }
       }
+
+      ret.positions?.sort(sortPositions)
 
       setSummary(ret)
 
