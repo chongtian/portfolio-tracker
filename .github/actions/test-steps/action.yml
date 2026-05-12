@@ -21,11 +21,11 @@ runs:
 
   - name: Install Playwright Browsers
     shell: bash  
-    run: npx playwright install --with-deps
+    run: cd playwright-ui-tests && npx playwright install --with-deps
 
   - name: Run Playwright tests
-    shell: bash  
-    run: npx playwright test
+    shell: bash
+    run: cd playwright-ui-tests && npx playwright test
     env:
       BASE_URL: ${{ inputs.BASE_URL }}
       TEST_API_URL: ${{ inputs.TEST_API_URL }}
