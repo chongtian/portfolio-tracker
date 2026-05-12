@@ -16,10 +16,14 @@ on:
         required: true
         type: boolean
         default: false
+      test_only:
+        description: 'Run Tests Only'
+        type: boolean
+        default: false         
 
 jobs:
   deploy-dev:
-    name: Deploy Development
+    name: Deploy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -31,12 +35,14 @@ jobs:
           node-version: '24'
 
       - name: Install Dependencies
+        if: github.event.inputs.test_only != 'true'
         run: |
           cd service && npm ci
           cd ../client && npm ci
           cd ../infra && npm ci
 
       - name: Configure AWS Credentials
+        if: github.event.inputs.test_only != 'true'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -44,10 +50,12 @@ jobs:
           aws-region: us-east-2
 
       - name: Build cdk
+        if: github.event.inputs.test_only != 'true'
         working-directory: ./infra
         run: npm run cdk-build          
 
       - name: Deploy Dev Stage
+        if: github.event.inputs.test_only != 'true'
         working-directory: ./infra
         run: npm run cdk-deploy:dev -- --require-approval never
         env:
@@ -60,10 +68,17 @@ jobs:
           MARKETDATA_API_KEY: ${{ secrets.MARKETDATA_API_KEY }}  
           CLIENT_BASE_URL: ${{ secrets.CLIENT_BASE_URL }}  
 
+      - name: Run Tests
+        uses: ./.github/actions/test-steps
+        with:
+          BASE_URL: ${{ secrets.TEST_BASE_URL }} 
+          TEST_USER_USERNAME: ${{ secrets.TEST_USER_USERNAME }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+
       - name: Deploy Prod Stage
         if: |
-          github.ref == 'refs/heads/main' || 
-          github.event.inputs.deploy_prod == 'true'
+          (github.ref == 'refs/heads/main' || 
+          github.event.inputs.deploy_prod == 'true') && github.event.inputs.test_only != 'true'
         working-directory: ./infra
         run: npm run cdk-deploy:prod -- --require-approval never
         env:

@@ -1,0 +1,48 @@
+name: 'Run Tests'
+description: 'Shared steps of testing for Portfolio Tracker'
+inputs:
+  BASE_URL:
+    required: true
+  TEST_API_URL:
+    required: false
+    default: ''
+  TEST_USER_USERNAME:
+    required: true
+  TEST_USER_PASSWORD:
+    required: true
+      
+runs:
+  using: "composite"
+  steps:
+  - name: Install Dependencies
+    shell: bash  
+    run: |
+      cd playwright-ui-tests && npm ci
+
+  - name: Install Playwright Browsers
+    shell: bash  
+    run: cd playwright-ui-tests && npx playwright install --with-deps
+
+  - name: Run Playwright tests
+    shell: bash
+    run: cd playwright-ui-tests && npx playwright test
+    env:
+      BASE_URL: ${{ inputs.BASE_URL }}
+      TEST_API_URL: ${{ inputs.TEST_API_URL }}
+      TEST_USER_USERNAME: ${{ inputs.TEST_USER_USERNAME }}
+      TEST_USER_PASSWORD: ${{ inputs.TEST_USER_PASSWORD }}
+
+  - name: Upload Test Results
+    uses: actions/upload-artifact@v4
+    if: failure()
+    with:
+      name: test-results
+      path: playwright-ui-tests/test-results/
+      retention-days: 30
+
+  - uses: actions/upload-artifact@v4
+    if: ${{ !cancelled() }}
+    with:
+      name: playwright-report
+      path: playwright-ui-tests/playwright-report/
+      retention-days: 30       

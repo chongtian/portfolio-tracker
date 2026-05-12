@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "types": [
+            "node"
+        ],
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "paths": {
+            "@ui-test/*": [
+                "./*"
+            ]
+        }
+    }
+}
