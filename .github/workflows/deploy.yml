@@ -71,7 +71,7 @@ jobs:
       - name: Run Tests
         uses: ./.github/actions/test-steps
         with:
-          BASE_URL: ${{ secrets.CLIENT_BASE_URL }} 
+          BASE_URL: ${{ secrets.TEST_BASE_URL }} 
           TEST_USER_USERNAME: ${{ secrets.TEST_USER_USERNAME }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
 
