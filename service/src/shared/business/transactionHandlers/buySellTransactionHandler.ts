@@ -81,8 +81,8 @@ export const buySellTransactionHandler = async (userId: string, accountId: strin
         lot.realizedPnl = (lot.realizedPnl || 0) + (txn.price || 0 - lot.openPrice) * (lot.remainingQuantity - remainingQty) * getMultipler(txn.instrumentId);
         lot.remainingQuantity = remainingQty;
         lot.cost = lot.openPrice * lot.remainingQuantity * getMultipler(lot.instrumentId) + (lot.feesAllocated || 0);        
-        lot.cashCollateral = (lot.cashCollateral || 0) * lot.remainingQuantity / lot.openQuantity;
         releaseCollateral += (lot.cashCollateral || 0) * (lot.openQuantity - lot.remainingQuantity) / lot.openQuantity;
+        lot.cashCollateral = (lot.cashCollateral || 0) * lot.remainingQuantity / lot.openQuantity;
         updateLotsPlan.push(lot);
 
     });
