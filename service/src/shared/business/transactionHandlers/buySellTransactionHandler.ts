@@ -115,9 +115,9 @@ export const buySellTransactionHandler = async (userId: string, accountId: strin
                 lastUpdated = :lastUpdated, cost = :cost",
                 ExpressionAttributeValues: {
                     ":remainingQuantity": lot.remainingQuantity,
-                    ":realizedPnl": lot.realizedPnl,
-                    ":feesAllocated": lot.feesAllocated,
-                    ":cashCollateral": lot.cashCollateral,
+                    ":realizedPnl": lot.realizedPnl || 0,
+                    ":feesAllocated": lot.feesAllocated || 0,
+                    ":cashCollateral": lot.cashCollateral || 0,
                     ":lastUpdated": new Date().toISOString(),
                     ":cost": lot.cost
                 }
