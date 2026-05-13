@@ -198,7 +198,7 @@ export default function AccountDetailPage() {
                 <LineChart data={summaryHistory1yr} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
-                  <YAxis scale="log" domain={['auto', 'auto']} allowDataOverflow />
+                  <YAxis domain={[0, 'auto']} allowDataOverflow={true} />
                   <Tooltip formatter={(value) => formatCurrency(value ? parseFloat(value.toString()) : null)} />
                   <Legend />
                   <Line type="monotone" dataKey="totalCash" stroke="#2563eb" strokeWidth={2} dot={false} />
@@ -212,7 +212,7 @@ export default function AccountDetailPage() {
                 <LineChart data={summaryHistoryYtd} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
-                  <YAxis scale="log" domain={['auto', 'auto']} allowDataOverflow />
+                  <YAxis domain={[0, 'auto']} allowDataOverflow={true} />
                   <Tooltip formatter={(value) => formatCurrency(value ? parseFloat(value.toString()) : null)} />
                   <Legend />
                   <Line type="monotone" dataKey="totalCash" stroke="#2563eb" strokeWidth={2} dot={false} />
