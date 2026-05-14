@@ -1,5 +1,5 @@
 import { summarizePositions } from "@shared/business/summarizePositions";
-import { getItemsByPKandSK, TABLE_NAME } from "@shared/clients/dynamoDb";
+import { getItemsByPKandSK, putItem, TABLE_NAME } from "@shared/clients/dynamoDb";
 import { UserMetadata } from "@shared/models/user";
 import { metadataPartitionKey, userSortKey } from "@shared/utils/getKeys";
 import { parseEvent } from "@shared/utils/parseEvent";
@@ -26,7 +26,7 @@ export const summarizePositionHandler = async (event: ApiEvent | SchedulerEvent)
             if (!result.success) return badRequest(result.error);
 
             const { body, userId, stage } = result.data;
-            const results = await summarizePositions(userId, TABLE_NAME());
+            const results = await summarizePositions(userId, TABLE_NAME(), 'API Gateway');
 
             return ok(results);
 
@@ -45,7 +45,7 @@ export const summarizePositionHandler = async (event: ApiEvent | SchedulerEvent)
                 const users = await getItemsByPKandSK<UserMetadata>(metadataPartitionKey, userSortKey, TABLE_NAME());
 
                 for (const user of users) {
-                    await summarizePositions(user.userId, TABLE_NAME());
+                    await summarizePositions(user.userId, TABLE_NAME(), 'EventBridge');
                 }
 
                 return { ok: true, message: 'Successfully summarized all Positions' };
@@ -54,10 +54,25 @@ export const summarizePositionHandler = async (event: ApiEvent | SchedulerEvent)
                 console.error(error);
                 return { ok: false, message: 'Failed to summarize all Positions' };
             }
-        }
+        } else {
+            try {
+                await putItem(
+                    {
+                        PK: 'SYSTEM',
+                        SK: `LOG#EVENTBRIDGE#${(new Date()).toISOString()}`,
+                        action: action,
+                        detail: event.detail
+                    },
+                    TABLE_NAME());
+            }
+            catch (error) {
+                console.error(error);
+            } finally {
+                return { ok: false, message: 'Failed to process event.' };
+            }
 
+        }
     }
 
     throw new Error('Unsupported event source');
-
 };
