@@ -16,17 +16,24 @@ import { cleanUpPieData, pieChartColors } from '../utils/chartHelper'
 import { useAccounts } from '../hooks/useAccounts'
 import type { PnLEntity } from '../models/pnl'
 import { sortPositions } from '../utils/sortPositions'
+import { useGlobalLoading } from '../hooks/LoadingContext'
 
 const chartColors = pieChartColors
 
 export default function GlobalSummaryPage() {
+  const { startLoading, stopLoading } = useGlobalLoading()
   const [summary, setSummary] = useState<GlobalDetail | null>(null)
   const [pnl, setPnl] = useState<PnLEntity[] | null>([])
   const { state } = useAccounts()
   const { accounts, loading } = state
-  if (loading) return <div>Loading...</div>
+  if (loading) {
+    startLoading()
+  } else {
+    stopLoading()
+  }
 
   useEffect(() => {
+    startLoading()
     fetchAccountDetails().then(details => {
       const ret: GlobalDetail = {
         summary: {
@@ -67,7 +74,7 @@ export default function GlobalSummaryPage() {
 
       setSummary(ret)
 
-    }).catch(console.error)
+    }).catch(console.error).finally(stopLoading)
   }, [])
 
   useEffect(() => {
@@ -79,9 +86,10 @@ export default function GlobalSummaryPage() {
       fetchPnL(a.accountId, startDateStr, endDateStr, pageSize)
     )
     const results = Promise.all(fetchPromises)
+    startLoading()
     results.then(items => {
       setPnl(items.flatMap(res => res.items ?? []))
-    }).catch(console.error)
+    }).catch(console.error).finally(stopLoading)
 
   }, [accounts])
 

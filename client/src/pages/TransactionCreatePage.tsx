@@ -6,6 +6,7 @@ import './PageStyles.css'
 import { OptionMultipler } from '../models/transaction'
 import { ConfirmMessage, ErrorMessageFailSaveTxn, ErrorMessageMissingAccount } from '../utils/constants'
 import { useAccounts } from '../hooks/useAccounts'
+import { useGlobalLoading } from '../hooks/LoadingContext'
 
 const assetTypes = ['STOCK', 'OPTION', 'CASH']
 const stockTypes = ['BUY', 'SELL', 'DIVIDEND', 'SPLIT']
@@ -29,9 +30,14 @@ function buildOptionInstrumentId(contract: OptionContractForm) {
 }
 
 export default function TransactionCreatePage() {
+  const { startLoading, stopLoading } = useGlobalLoading()
   const { state } = useAccounts()
   const { accounts, loading } = state
-  if (loading) return <div>Loading...</div>
+  if (loading) {
+    startLoading()
+  } else {
+    stopLoading()
+  }
 
   const [step, setStep] = useState(1)
   const [assetType, setAssetType] = useState<typeof assetTypes[number]>('STOCK')
@@ -144,6 +150,7 @@ export default function TransactionCreatePage() {
       form.txnId = ulid()
     }
 
+    startLoading()
     createTransaction({
       ...form,
       assetType,
@@ -158,7 +165,7 @@ export default function TransactionCreatePage() {
     }).catch(err => {
       console.error(err)
       setError(ErrorMessageFailSaveTxn)
-    })
+    }).finally(stopLoading)
   }
 
   return (
@@ -204,7 +211,7 @@ export default function TransactionCreatePage() {
               Account
               <select name="accountId" value={form.accountId} onChange={handleChange}>
                 <option value="">Select account</option>
-                {accounts.filter(a=>a.active).map((account) => (
+                {accounts.filter(a => a.active).map((account) => (
                   <option key={account.accountId} value={account.accountId}>
                     {account.accountName}
                   </option>

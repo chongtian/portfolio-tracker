@@ -21,10 +21,12 @@ import { cleanUpPieData, pieChartColors } from '../utils/chartHelper'
 import type { SummaryEntity } from '../models/summary'
 import type { PnLEntity } from '../models/pnl'
 import { sortPositions } from '../utils/sortPositions'
+import { useGlobalLoading } from '../hooks/LoadingContext'
 
 const chartColors = pieChartColors
 
 export default function AccountDetailPage() {
+  const { startLoading, stopLoading } = useGlobalLoading()
   const { id } = useParams()
   const { state } = useLocation()
   const entity = state?.account
@@ -39,20 +41,22 @@ export default function AccountDetailPage() {
     }
 
     if (!entity) {
+      startLoading()
       fetchAccountDetail(id).then(
         data => {
           data?.positions?.sort(sortPositions)
           setAccount(data)
         }
-      ).catch(console.error)
+      ).catch(console.error).finally(stopLoading)
     }
 
     const endDateStr = (new Date()).toISOString().slice(0, 10)
     const startDateStr = (new Date(new Date().setFullYear(new Date().getFullYear() - 1))).toISOString().slice(0, 10)
     const pageSize = 366
+    startLoading()
     fetchSummaryHistory(id, startDateStr, endDateStr, pageSize).then(data => {
       setSummaryHistory(data.items.sort((a, b) => (a.asOfDate || '0000-00-00').localeCompare(b.asOfDate || '0000-00-00')))
-    }).catch(console.error)
+    }).catch(console.error).finally(stopLoading)
 
   }, [entity, id])
 
@@ -60,9 +64,10 @@ export default function AccountDetailPage() {
     const endDateStr = (new Date()).toISOString().slice(0, 10)
     const startDateStr = (new Date(new Date().setFullYear(new Date().getFullYear() - 1))).toISOString().slice(0, 10)
     const pageSize = 366
+    startLoading()
     fetchPnL((id ?? account?.accountId) ?? 'unk', startDateStr, endDateStr, pageSize).then(items => {
       setPnl(items.items ?? [])
-    }).catch(console.error)
+    }).catch(console.error).finally(stopLoading)
 
   }, [id, account])
 

@@ -6,9 +6,11 @@ import type { TransactionEntity } from '../models/transaction'
 import { ConfirmDeleteMessage } from '../utils/constants'
 import { formatCurrency } from '../utils/formatCurrency'
 import { useAccounts } from '../hooks/useAccounts'
+import { useGlobalLoading } from '../hooks/LoadingContext'
 
 
 export default function TransactionViewPage() {
+  const { startLoading, stopLoading } = useGlobalLoading()
   const { id } = useParams()
   const { state } = useLocation()
   const entity = state?.transaction
@@ -18,7 +20,11 @@ export default function TransactionViewPage() {
 
   const { state: accountData } = useAccounts()
   const { accounts, loading } = accountData
-  if (loading) return <div>Loading...</div>
+  if (loading) {
+    startLoading()
+  } else {
+    stopLoading()
+  }
 
   const accountMap = useMemo(() => {
     return new Map(accounts.map(a => [a.accountId, a.accountName]))
@@ -27,7 +33,10 @@ export default function TransactionViewPage() {
   useEffect(() => {
     const loadData = async () => {
       if (!id) return
-      if (!entity) fetchTransactionById(id).then(setTransaction).catch(console.error)
+      if (!entity) {
+        startLoading()
+        fetchTransactionById(id).then(setTransaction).catch(console.error).finally(stopLoading)
+      }
     }
     loadData()
   }, [id])
@@ -38,6 +47,7 @@ export default function TransactionViewPage() {
     const confirmed = window.confirm(ConfirmDeleteMessage)
     if (!confirmed) return
 
+    startLoading()
     deleteTransaction(transaction?.SK!).then(
       succesful => {
         if (succesful) {
@@ -46,7 +56,7 @@ export default function TransactionViewPage() {
           setError('Unable to delete transaction.')
         }
       }
-    ).catch(console.error)
+    ).catch(console.error).finally(stopLoading)
   }
 
   if (!transaction) {
