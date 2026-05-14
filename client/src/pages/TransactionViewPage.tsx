@@ -19,12 +19,12 @@ export default function TransactionViewPage() {
   const [error, setError] = useState('')
 
   const { state: accountData } = useAccounts()
-  const { accounts, loading } = accountData
-  if (loading) {
-    startLoading()
-  } else {
-    stopLoading()
-  }
+  const { accounts } = accountData
+  // if (loading) {
+  //   startLoading()
+  // } else {
+  //   stopLoading()
+  // }
 
   const accountMap = useMemo(() => {
     return new Map(accounts.map(a => [a.accountId, a.accountName]))

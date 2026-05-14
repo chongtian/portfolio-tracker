@@ -25,12 +25,7 @@ export default function GlobalSummaryPage() {
   const [summary, setSummary] = useState<GlobalDetail | null>(null)
   const [pnl, setPnl] = useState<PnLEntity[] | null>([])
   const { state } = useAccounts()
-  const { accounts, loading } = state
-  if (loading) {
-    startLoading()
-  } else {
-    stopLoading()
-  }
+  const { accounts } = state
 
   useEffect(() => {
     startLoading()

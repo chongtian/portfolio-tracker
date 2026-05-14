@@ -7,12 +7,8 @@ import { useGlobalLoading } from '../hooks/LoadingContext'
 export default function SummarizationPage() {
   const { startLoading, stopLoading } = useGlobalLoading()
   const { state } = useAccounts()
-  const { accounts, loading } = state
-  if (loading) {
-    startLoading()
-  } else {
-    stopLoading()
-  }
+  const { accounts } = state
+
   const accountMap = useMemo(() => {
     return new Map(accounts.map(a => [a.accountId, a.accountName]))
   }, [accounts])
@@ -27,6 +23,7 @@ export default function SummarizationPage() {
     setStatus('pending')
     setMessage(['Running summarization...'])
 
+    startLoading()
     triggerSummarization().then(
       messages => {
         const message = ['Summarization has been triggered.']
@@ -43,7 +40,7 @@ export default function SummarizationPage() {
         setStatus('error')
         setMessage(['Unable to trigger summarization.'])
       }
-    )
+    ).finally(stopLoading)
   }
 
   return (

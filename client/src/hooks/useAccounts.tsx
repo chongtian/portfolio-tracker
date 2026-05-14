@@ -3,10 +3,10 @@ import type { ReactNode } from 'react'
 import type { AccountEntity } from '../models/account'
 import { fetchAccounts } from '../services/api'
 import { useAuth } from './useAuth'
+import { useGlobalLoading } from './LoadingContext'
 
 interface AccountState {
     accounts: AccountEntity[]
-    loading: boolean
 }
 
 type AccountAction =
@@ -15,7 +15,7 @@ type AccountAction =
     | { type: 'UPDATE_ACCOUNT'; payload: AccountEntity }
     | { type: 'CLEAR_CACHE' }
     | { type: 'REMOVE_ACCOUNT'; payload: string }
-    | { type: 'SET_LOADING'; payload: boolean }
+    | { type: 'SET_LOADING' }
 
 interface AccountContextType {
     state: AccountState
@@ -28,7 +28,7 @@ const AccountContext = createContext<AccountContextType | undefined>(undefined)
 function accountReducer(state: AccountState, action: AccountAction): AccountState {
     switch (action.type) {
         case 'SET_ACCOUNTS':
-            return { ...state, accounts: action.payload, loading: false }
+            return { ...state, accounts: action.payload }
         case 'ADD_ACCOUNT':
             return { ...state, accounts: [...state.accounts, action.payload] }
         case 'UPDATE_ACCOUNT':
@@ -45,25 +45,29 @@ function accountReducer(state: AccountState, action: AccountAction): AccountStat
             }
 
         case 'CLEAR_CACHE':
-            return { accounts: [], loading: false }
+            return { accounts: [] }
         default:
             return state
     }
 }
 
 export function AccountProvider({ children }: { children: ReactNode }) {
-    const [state, dispatch] = useReducer(accountReducer, { accounts: [], loading: true })
+    const [state, dispatch] = useReducer(accountReducer, { accounts: [] })
     const { isAuthenticated } = useAuth()
+    const { startLoading, stopLoading } = useGlobalLoading()
 
     useEffect(() => {
         if (isAuthenticated) {
             const initFetch = async () => {
                 try {
+                    startLoading()
                     const data = await fetchAccounts()
                     data.sort((a, b) => a.accountName.localeCompare(b.accountName))
                     dispatch({ type: 'SET_ACCOUNTS', payload: data })
                 } catch (err) {
                     console.error(err)
+                } finally {
+                    stopLoading()
                 }
             }
             initFetch()
@@ -73,8 +77,9 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     }, [isAuthenticated])
 
     const refreshAccounts = async () => {
-        dispatch({ type: 'SET_LOADING', payload: true })
+        startLoading()
         const data = await fetchAccounts()
+        stopLoading()
         dispatch({ type: 'SET_ACCOUNTS', payload: data })
     }
 

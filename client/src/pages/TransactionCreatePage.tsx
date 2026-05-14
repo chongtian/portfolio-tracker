@@ -32,12 +32,12 @@ function buildOptionInstrumentId(contract: OptionContractForm) {
 export default function TransactionCreatePage() {
   const { startLoading, stopLoading } = useGlobalLoading()
   const { state } = useAccounts()
-  const { accounts, loading } = state
-  if (loading) {
-    startLoading()
-  } else {
-    stopLoading()
-  }
+  const { accounts } = state
+  // if (loading) {
+  //   startLoading()
+  // } else {
+  //   stopLoading()
+  // }
 
   const [step, setStep] = useState(1)
   const [assetType, setAssetType] = useState<typeof assetTypes[number]>('STOCK')

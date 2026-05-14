@@ -63,18 +63,12 @@ function getTransactionPreview(txn: TransactionEntity, accountMap: Map<string, s
 }
 
 export default function TransactionSearchPage() {
-  const { startLoading, stopLoading } = useGlobalLoading()
+  const { isLoading, startLoading, stopLoading } = useGlobalLoading()
   const { state } = useAccounts()
-  const { accounts, loading } = state
-  if (loading) {
-    startLoading()
-  } else {
-    stopLoading()
-  }
+  const { accounts } = state
   const [queryResult, setTransactions] = useState<QueryResult<TransactionEntity>>({ items: [], hasMore: false })
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
-  const [loadingTxn, setLoading] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -91,9 +85,7 @@ export default function TransactionSearchPage() {
 
       if (append) {
         setLoadingMore(true)
-      } else {
-        setLoading(true)
-      }
+      } 
       
       const result = await fetchTransactions(startDate || undefined, endDate || undefined, PAGE_SIZE, nextToken)
 
@@ -110,7 +102,7 @@ export default function TransactionSearchPage() {
       console.error(err)
       setError('Unable to load transactions. Please try again.')
     } finally {
-      setLoading(false)
+      // setLoading(false)
       setLoadingMore(false)
       stopLoading()
     }
@@ -121,15 +113,6 @@ export default function TransactionSearchPage() {
     setError(null)
     await loadTransactions(undefined, false)
   }
-
-  // const handleLoadMore = async () => {
-  //   if (!queryResult.nextToken) {
-  //     return
-  //   }
-
-  //   await loadTransactions(queryResult.nextToken, true)
-  // }
-
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -156,14 +139,14 @@ export default function TransactionSearchPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        setLoading(true)
+        startLoading()
         const txnResult = await fetchTransactions(undefined, undefined, PAGE_SIZE)
         setTransactions(txnResult)
       } catch (err) {
         console.error(err)
         setError('Unable to load transactions or accounts. Please refresh.')
       } finally {
-        setLoading(false)
+        stopLoading()
       }
     }
 
@@ -176,7 +159,7 @@ export default function TransactionSearchPage() {
         <div>
           <h1>Transactions</h1>
         </div>
-        <Link to="/transactions/new" className="secondary-button">
+        <Link to="/transactions/new" className="primary-button">
           Create Transaction
         </Link>
       </div>
@@ -191,8 +174,8 @@ export default function TransactionSearchPage() {
             End date
             <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
           </label>
-          <button type="submit" className="link-button" disabled={loading}>
-            {loading ? 'Searching...' : 'Search'}
+          <button type="submit" className="secondary-button" disabled={isLoading}>
+            {isLoading ? 'Searching...' : 'Search'}
           </button>
         </div>
       </form>
@@ -214,7 +197,7 @@ export default function TransactionSearchPage() {
             </tr>
           </thead>
           <tbody className="block md:table-row-group">
-            {queryResult.items.length === 0 && !loadingTxn ? (
+            {queryResult.items.length === 0 && !isLoading ? (
               <tr>
                 <td colSpan={6} style={{ textAlign: 'center' }}>
                   No transactions found.
@@ -245,9 +228,6 @@ export default function TransactionSearchPage() {
 
       {queryResult.hasMore ? (
         <div style={{ padding: '1rem' }}>
-          {/* <button className="link-button" onClick={handleLoadMore} disabled={loadingMore}>
-            {loadingMore ? 'Loading more...' : 'Load more transactions'}
-          </button> */}
           <div ref={loaderRef} style={{ height: "50px", textAlign: "center" }}>
             {loadingMore ? 'Loading more...' : 'Load more transactions'}
           </div>
