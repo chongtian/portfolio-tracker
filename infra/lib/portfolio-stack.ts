@@ -450,11 +450,11 @@ export class PortfolioTrackerStack extends cdk.Stack {
     // ============================================================================
     const schedule = new scheduler.Schedule(this, 'DailySchedule', {
       schedule: scheduler.ScheduleExpression.cron({
-        minute: '30',
-        hour: '16',
+        minute: '00',
+        hour: '17',
         weekDay: 'MON-FRI',
       }),
-      timeZone: 'America/Chicago', // not working
+      timeZone: 'America/Chicago', 
       target: new targets.LambdaInvoke(summarizePositionFn, {
         input: scheduler.ScheduleTargetInput.fromObject({
           action: 'summarize_positions',

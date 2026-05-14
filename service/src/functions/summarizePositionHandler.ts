@@ -38,6 +38,20 @@ export const summarizePositionHandler = async (event: ApiEvent | SchedulerEvent)
     }
 
     if (isEventBridgeEvent(event)) {
+        // for triaging
+        try {
+            await putItem(
+                {
+                    PK: 'SYSTEM',
+                    SK: `LOG#EVENTBRIDGE#${(new Date()).toISOString()}`,
+                    detail: event.detail
+                },
+                TABLE_NAME());
+        }
+        catch (error) {
+            console.error(error);
+        } 
+
         const { action } = event.detail;
         if (action === 'summarize_positions') {
             try {
@@ -55,21 +69,21 @@ export const summarizePositionHandler = async (event: ApiEvent | SchedulerEvent)
                 return { ok: false, message: 'Failed to summarize all Positions' };
             }
         } else {
-            try {
-                await putItem(
-                    {
-                        PK: 'SYSTEM',
-                        SK: `LOG#EVENTBRIDGE#${(new Date()).toISOString()}`,
-                        action: action,
-                        detail: event.detail
-                    },
-                    TABLE_NAME());
-            }
-            catch (error) {
-                console.error(error);
-            } finally {
-                return { ok: false, message: 'Failed to process event.' };
-            }
+            // try {
+            //     await putItem(
+            //         {
+            //             PK: 'SYSTEM',
+            //             SK: `LOG#EVENTBRIDGE#${(new Date()).toISOString()}`,
+            //             action: action,
+            //             detail: event.detail
+            //         },
+            //         TABLE_NAME());
+            // }
+            // catch (error) {
+            //     console.error(error);
+            // } finally {
+            //     return { ok: false, message: 'Failed to process event.' };
+            // }
 
         }
     }

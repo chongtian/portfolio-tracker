@@ -190,7 +190,8 @@ export const summarizePositions = async (userId: string, tableName: string, sour
         PK: accountPartitionKey(userId),
         SK: processedSortKey(),
         createdAt: (new Date()).toISOString(),
-        event: 'summarize_positions'
+        event: 'summarize_positions',
+        source: source ?? 'unknown'
     }
 
     try {
