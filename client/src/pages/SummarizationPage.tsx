@@ -2,11 +2,17 @@ import { useMemo, useState } from 'react'
 import { triggerSummarization } from '../services/api'
 import './PageStyles.css'
 import { useAccounts } from '../hooks/useAccounts'
+import { useGlobalLoading } from '../hooks/LoadingContext'
 
 export default function SummarizationPage() {
+  const { startLoading, stopLoading } = useGlobalLoading()
   const { state } = useAccounts()
   const { accounts, loading } = state
-  if (loading) return <div>Loading...</div>
+  if (loading) {
+    startLoading()
+  } else {
+    stopLoading()
+  }
   const accountMap = useMemo(() => {
     return new Map(accounts.map(a => [a.accountId, a.accountName]))
   }, [accounts])
@@ -25,7 +31,7 @@ export default function SummarizationPage() {
       messages => {
         const message = ['Summarization has been triggered.']
         for (const [key, value] of Object.entries(messages)) {
-          const msgs= value.split('\n').map(m=>`${accountMap.get(key)||'Unknown'}: ${m}`)
+          const msgs = value.split('\n').map(m => `${accountMap.get(key) || 'Unknown'}: ${m}`)
           message.push(...msgs)
         }
         setStatus('success')

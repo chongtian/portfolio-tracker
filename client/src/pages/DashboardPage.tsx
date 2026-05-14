@@ -5,12 +5,15 @@ import { fetchAccountDetails } from '../services/api'
 import type { AccountDetail } from '../models/account'
 import { formatCurrency } from '../utils/formatCurrency'
 import { useAccounts } from '../hooks/useAccounts'
+import { useGlobalLoading } from '../hooks/LoadingContext'
 
 export default function DashboardPage() {
   const [accountDetails, setAccounts] = useState<AccountDetail[]>([])
   const { dispatch } = useAccounts()
+  const { startLoading, stopLoading } = useGlobalLoading()
 
   useEffect(() => {
+    startLoading()
     fetchAccountDetails().then(
       data => {
         if (data) {
@@ -25,7 +28,7 @@ export default function DashboardPage() {
           dispatch({ type: 'SET_ACCOUNTS', payload: accounts })
         }
       }
-    ).catch(console.error)
+    ).catch(console.error).finally(stopLoading)
   }, [])
 
   const totalCash = accountDetails.reduce((sum, account) => sum + (account.summary.totalCash ?? 0), 0)

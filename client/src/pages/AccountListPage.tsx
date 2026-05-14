@@ -6,12 +6,15 @@ import type { AccountDetail } from '../models/account'
 import { formatCurrency } from '../utils/formatCurrency'
 import { useAccounts } from '../hooks/useAccounts'
 import { sortPositions } from '../utils/sortPositions'
+import { useGlobalLoading } from '../hooks/LoadingContext'
 
 export default function AccountListPage() {
+  const { startLoading, stopLoading } = useGlobalLoading()
   const [accounts, setAccounts] = useState<AccountDetail[]>([])
   const { dispatch } = useAccounts()
 
   useEffect(() => {
+    startLoading()
     fetchAccountDetails().then(
       data => {
         if (data) {
@@ -24,7 +27,7 @@ export default function AccountListPage() {
           dispatch({ type: 'SET_ACCOUNTS', payload: accounts })
         }
       }
-    ).catch(console.error)
+    ).catch(console.error).finally(stopLoading)
   }, [])
 
   return (

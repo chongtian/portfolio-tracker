@@ -5,8 +5,10 @@ import './PageStyles.css'
 import type { AccountEntity } from '../models/account'
 import { ConfirmMessage } from '../utils/constants'
 import { useAccounts } from '../hooks/useAccounts'
+import { useGlobalLoading } from '../hooks/LoadingContext'
 
 export default function AccountEditPage() {
+  const { startLoading, stopLoading } = useGlobalLoading()
   const { id } = useParams()
   const navigate = useNavigate()
   const [account, setAccount] = useState<AccountEntity | null>(null)
@@ -15,7 +17,8 @@ export default function AccountEditPage() {
 
   useEffect(() => {
     if (!id) return
-    fetchAccount(id).then(setAccount).catch(console.error)
+    startLoading()
+    fetchAccount(id).then(setAccount).catch(console.error).finally(stopLoading)
   }, [id])
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -40,6 +43,7 @@ export default function AccountEditPage() {
     event.preventDefault()
     if (!account) return
 
+    startLoading()
     saveAccount({
       accountName: account.accountName,
       brokerName: account.brokerName,
@@ -55,7 +59,7 @@ export default function AccountEditPage() {
     ).catch(err => {
       console.error(err)
       setError('Unable to update account. Please try again.')
-    })
+    }).finally(stopLoading)
   }
 
   return (

@@ -10,7 +10,7 @@ import { getMultipler } from "@shared/utils/getMultipler";
 import { SummaryEntity } from "@shared/models/summary";
 import { preciseRound } from "@shared/utils/mathHelper";
 
-export const summarizePositions = async (userId: string, tableName: string, currentDate?: Date): Promise<Record<string, string>> => {
+export const summarizePositions = async (userId: string, tableName: string, source?: string, currentDate?: Date): Promise<Record<string, string>> => {
 
     const logs: Record<string, string> = {};
     const accounts = await getItemsByPK<AccountEntity>(accountPartitionKey(userId), tableName, EntityTypeAccount);
@@ -24,6 +24,7 @@ export const summarizePositions = async (userId: string, tableName: string, curr
         SK: processedSortKey(),
         createdAt: (new Date()).toISOString(),
         event: 'summarize_positions',
+        source: source ?? 'unknown',
         isProcessing: true
     }
 

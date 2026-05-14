@@ -4,8 +4,10 @@ import { saveAccount } from '../services/api'
 import './PageStyles.css'
 import { ConfirmMessage } from '../utils/constants'
 import { useAccounts } from '../hooks/useAccounts'
+import { useGlobalLoading } from '../hooks/LoadingContext'
 
 export default function AccountCreatePage() {
+  const { startLoading, stopLoading } = useGlobalLoading()
   const { dispatch } = useAccounts()
   const navigate = useNavigate()
   const [form, setForm] = useState({
@@ -34,6 +36,7 @@ export default function AccountCreatePage() {
       return
     }
 
+    startLoading()
     saveAccount(form).then(
       newAccount => {
         dispatch({ type: 'ADD_ACCOUNT', payload: newAccount })
@@ -45,7 +48,7 @@ export default function AccountCreatePage() {
         console.error(err)
         setError('Unable to create account. Please try again.')
       }
-    )
+    ).finally(stopLoading)
 
   }
 

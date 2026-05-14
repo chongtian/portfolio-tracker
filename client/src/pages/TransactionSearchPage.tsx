@@ -7,6 +7,7 @@ import type { QueryResult } from '../models/types'
 import type { SubmitEvent } from 'react'
 import { formatCurrency } from '../utils/formatCurrency'
 import { useAccounts } from '../hooks/useAccounts'
+import { useGlobalLoading } from '../hooks/LoadingContext'
 
 interface TransactionPreview {
   transactionId: string; // SK of the transaction
@@ -62,9 +63,14 @@ function getTransactionPreview(txn: TransactionEntity, accountMap: Map<string, s
 }
 
 export default function TransactionSearchPage() {
+  const { startLoading, stopLoading } = useGlobalLoading()
   const { state } = useAccounts()
   const { accounts, loading } = state
-  if (loading) return <div>Loading...</div>
+  if (loading) {
+    startLoading()
+  } else {
+    stopLoading()
+  }
   const [queryResult, setTransactions] = useState<QueryResult<TransactionEntity>>({ items: [], hasMore: false })
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
@@ -81,11 +87,14 @@ export default function TransactionSearchPage() {
 
   const loadTransactions = async (nextToken?: string, append = false) => {
     try {
+      startLoading()
+
       if (append) {
         setLoadingMore(true)
       } else {
         setLoading(true)
       }
+      
       const result = await fetchTransactions(startDate || undefined, endDate || undefined, PAGE_SIZE, nextToken)
 
       if (append) {
@@ -103,6 +112,7 @@ export default function TransactionSearchPage() {
     } finally {
       setLoading(false)
       setLoadingMore(false)
+      stopLoading()
     }
   }
 

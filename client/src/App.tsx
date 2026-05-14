@@ -15,6 +15,7 @@ import TransactionViewPage from './pages/TransactionViewPage'
 import SummarizationPage from './pages/SummarizationPage'
 import NotFoundPage from './pages/NotFoundPage'
 import { AccountProvider } from './hooks/useAccounts'
+import { LoadingProvider } from './hooks/LoadingContext'
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { isAuthenticated, loading } = useAuth()
@@ -33,37 +34,39 @@ function RequireAuth({ children }: { children: ReactNode }) {
 function App() {
   return (
     <AuthProvider>
-      <AccountProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route
-              path="/"
-              element={
-                <RequireAuth>
-                  <Layout />
-                </RequireAuth>
-              }
-            >
-              <Route index element={<DashboardPage />} />
-              <Route path="dashboard" element={<DashboardPage />} />
-              <Route path="accounts" element={<AccountListPage />} />
-              <Route path="accounts/new" element={<AccountCreatePage />} />
-              <Route path="accounts/:id" element={<AccountDetailPage />} />
-              <Route path="accounts/:id/edit" element={<AccountEditPage />} />
-              <Route path="globalsummary" element={<GlobalSummaryPage />} />
-              <Route path="transactions/new" element={<TransactionCreatePage />} />
-              <Route path="transactions" element={<TransactionSearchPage />} />
-              <Route path="transactions/:id" element={<TransactionViewPage />} />
-              <Route path="summarize" element={<SummarizationPage />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Route>
+      <LoadingProvider>
+        <AccountProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route
+                path="/"
+                element={
+                  <RequireAuth>
+                    <Layout />
+                  </RequireAuth>
+                }
+              >
+                <Route index element={<DashboardPage />} />
+                <Route path="dashboard" element={<DashboardPage />} />
+                <Route path="accounts" element={<AccountListPage />} />
+                <Route path="accounts/new" element={<AccountCreatePage />} />
+                <Route path="accounts/:id" element={<AccountDetailPage />} />
+                <Route path="accounts/:id/edit" element={<AccountEditPage />} />
+                <Route path="globalsummary" element={<GlobalSummaryPage />} />
+                <Route path="transactions/new" element={<TransactionCreatePage />} />
+                <Route path="transactions" element={<TransactionSearchPage />} />
+                <Route path="transactions/:id" element={<TransactionViewPage />} />
+                <Route path="summarize" element={<SummarizationPage />} />
+                <Route path="*" element={<NotFoundPage />} />
+              </Route>
 
-            {/* optional public 404 */}
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </BrowserRouter>
-      </AccountProvider>
+              {/* optional public 404 */}
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </BrowserRouter>
+        </AccountProvider>
+      </LoadingProvider>
     </AuthProvider>
   )
 }

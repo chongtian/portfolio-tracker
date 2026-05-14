@@ -8,36 +8,56 @@ test.use({ storageState: AdminAuthDataFilePath });
 
 test.describe('Navigation Bar', () => {
 
-    test('user navigates to Accounts', async ({ page }) => {
+    test('user navigates to Accounts', async ({ page, isMobile }) => {
         await page.goto(BASE_URL!);
+        if (isMobile) {
+            await page.getByRole('button', { name: 'Toggle navigation' }).click();
+        }
+
         const menu = page.getByRole('link', { name: 'Accounts' });
         await menu.click();
         await expect(page).toHaveURL(/accounts/);
     });
 
-    test('user navigates to Global Summary', async ({ page }) => {
+    test('user navigates to Global Summary', async ({ page, isMobile }) => {
         await page.goto(BASE_URL!);
+        if (isMobile) {
+            await page.getByRole('button', { name: 'Toggle navigation' }).click();
+        }
+
         const menu = page.getByRole('link', { name: 'Global Summary' });
         await menu.click();
         await expect(page).toHaveURL(/globalsummary/);
     });
 
-    test('user navigates to Transactions', async ({ page }) => {
+    test('user navigates to Transactions', async ({ page, isMobile }) => {
         await page.goto(BASE_URL!);
+        if (isMobile) {
+            await page.getByRole('button', { name: 'Toggle navigation' }).click();
+        }
+
         const menu = page.getByRole('link', { name: 'Transactions' });
         await menu.click();
         await expect(page).toHaveURL(/transactions/);
     });
 
-    test('user navigates to Summarize', async ({ page }) => {
+    test('user navigates to Summarize', async ({ page, isMobile }) => {
         await page.goto(BASE_URL!);
+        if (isMobile) {
+            await page.getByRole('button', { name: 'Toggle navigation' }).click();
+        }
+
         const menu = page.getByRole('link', { name: 'Summarize' });
         await menu.click();
         await expect(page).toHaveURL(/summarize/);
     });
 
-    test('user navigates to Dashboard', async ({ page }) => {
+    test('user navigates to Dashboard', async ({ page, isMobile }) => {
         await page.goto(BASE_URL!);
+        if (isMobile) {
+            await page.getByRole('button', { name: 'Toggle navigation' }).click();
+        }
+
         const menu = page.getByRole('link', { name: 'Dashboard' });
         await menu.click();
         await expect(page).toHaveURL(/dashboard/);

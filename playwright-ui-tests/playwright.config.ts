@@ -45,6 +45,12 @@ export default defineConfig({
       dependencies: ['setup'],
     },
 
+    {
+      name: 'Mobile Chromium',
+      use: { ...devices['Pixel 7'], isMobile: true, },
+      dependencies: ['setup'],
+    },
+
     // {
     //   name: 'firefox',
     //   use: { ...devices['Desktop Firefox'] },

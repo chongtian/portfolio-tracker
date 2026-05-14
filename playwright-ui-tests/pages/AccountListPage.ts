@@ -51,7 +51,7 @@ export class AccountListPage {
     // index is 1-based
     getAccountDetailLink(index: number) {
         const tr = this.getAccountLine(index);
-        return tr.locator('td', { has: this.page.locator('a.link-button') });
+        return tr.locator('td', { has: this.page.locator('a.link-button') }).locator('a.link-button');
     }
 
     private getAccountLine(index: number) {

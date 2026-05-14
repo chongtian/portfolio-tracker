@@ -33,7 +33,7 @@ test.describe('Account List', () => {
         await expect(accountsPage.getAcountCashBalance(index)).toContainText('$207,637.37');
         await expect(accountsPage.getAccountTotalValue(index)).toContainText('$340,005.37');
         await accountsPage.getAccountDetailLink(index).click();
-        expect(page).toHaveURL(/accounts\/01KQWM6QE218DZ462TXGG8QSHX/);
+        await expect(page).toHaveURL(/accounts\/01KQWM6QE218DZ462TXGG8QSHX/);
 
     });
 
