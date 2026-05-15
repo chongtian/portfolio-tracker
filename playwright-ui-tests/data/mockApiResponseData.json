@@ -708,7 +708,7 @@
         ]
     },
     {
-        "route": "*/**/portfolio/account/01KQWTE9M761E2HQ9A2FZ7F155/history/realizedpnl?startDate=*&endDate=*&pageSize=*",
+        "route": "*/**/portfolio/account/01KQWTE9M761E2HQ9A2FZ7F155/realizedpnl?startDate=*&endDate=*&pageSize=*",
         "name": "listPnlForAccount-01KQWTE9M761E2HQ9A2FZ7F155",
         "data": {
             "items": [
@@ -887,7 +887,7 @@
         }
     },
     {
-        "route": "*/**/portfolio/account/01KQWM6QE218DZ462TXGG8QSHX/history/realizedpnl?startDate=*&endDate=*&pageSize=*",
+        "route": "*/**/portfolio/account/01KQWM6QE218DZ462TXGG8QSHX/realizedpnl?startDate=*&endDate=*&pageSize=*",
         "name": "listPnlForAccount-01KQWM6QE218DZ462TXGG8QSHX",
         "data": {
             "items": [

@@ -15,13 +15,13 @@ test.describe('Global Summary', () => {
             await route.fulfill({ json });
         });
 
-        await page.route('*/**/portfolio/account/01KQWTE9M761E2HQ9A2FZ7F155/history/realizedpnl?startDate=*&endDate=*&pageSize=*', async route => {
-            const json = getDataByRoute('*/**/portfolio/account/01KQWTE9M761E2HQ9A2FZ7F155/history/realizedpnl?startDate=*&endDate=*&pageSize=*');
+        await page.route('*/**/portfolio/account/01KQWTE9M761E2HQ9A2FZ7F155/realizedpnl?startDate=*&endDate=*&pageSize=*', async route => {
+            const json = getDataByRoute('*/**/portfolio/account/01KQWTE9M761E2HQ9A2FZ7F155/realizedpnl?startDate=*&endDate=*&pageSize=*');
             await route.fulfill({ json });
         });
 
-        await page.route('*/**/portfolio/account/01KQWM6QE218DZ462TXGG8QSHX/history/realizedpnl?startDate=*&endDate=*&pageSize=*', async route => {
-            const json = getDataByRoute('*/**/portfolio/account/01KQWM6QE218DZ462TXGG8QSHX/history/realizedpnl?startDate=*&endDate=*&pageSize=*');
+        await page.route('*/**/portfolio/account/01KQWM6QE218DZ462TXGG8QSHX/realizedpnl?startDate=*&endDate=*&pageSize=*', async route => {
+            const json = getDataByRoute('*/**/portfolio/account/01KQWM6QE218DZ462TXGG8QSHX/realizedpnl?startDate=*&endDate=*&pageSize=*');
             await route.fulfill({ json });
         });        
 
