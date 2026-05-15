@@ -10,6 +10,9 @@ export const EntityTypePnL = "PNL";
 export const EntityTypeInstrument = "INSTR";
 export const ProcessedMark = "PROCESSED";
 
+export const ApiGatewaySource = "API Gateway";
+export const EventBridgeScheduleSource = "EventBridge Schedule";
+
 export const metadataPartitionKey = EntityTypeMetadata;
 export const userSortKey = EntityTypeUser;
 

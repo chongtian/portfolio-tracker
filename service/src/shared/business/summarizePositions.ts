@@ -2,7 +2,7 @@ import { TransactWriteCommand, UpdateCommandInput } from "@aws-sdk/lib-dynamodb"
 import { getItemsByPK, getItemsByPKandSK, putItem, queryTable, sendCommand, TransactItems, updateItem } from "@shared/clients/dynamoDb";
 import { AccountEntity } from "@shared/models/account";
 import { PositionEntity } from "@shared/models/position";
-import { accountPartitionKey, EntityTypeAccount, EntityTypePosition, positionHistorySortKey, positionPartitionKey, processedSortKey, summaryHistorySortKey, summaryPartitionKey, summarySortKey } from "@shared/utils/getKeys";
+import { accountPartitionKey, EntityTypeAccount, EntityTypePosition, EventBridgeScheduleSource, positionHistorySortKey, positionPartitionKey, processedSortKey, summaryHistorySortKey, summaryPartitionKey, summarySortKey } from "@shared/utils/getKeys";
 import { getCurrentMarketPrice } from "@shared/utils/getMarketPrice";
 import { parseOptionContract } from "@shared/utils/parseOptionContract";
 import { expireOptionPosition } from "./expireOptionPosition";
@@ -77,7 +77,10 @@ export const summarizePositions = async (userId: string, tableName: string, sour
             const optionContract = parseOptionContract(instrumentId);
             if (optionContract) {
                 const { expirationDate } = optionContract;
-                if (expirationDate.toISOString().slice(0, 10) < currentDate.toISOString().slice(0, 10)) {
+                if (
+                    (expirationDate.toISOString().slice(0, 10) < currentDate.toISOString().slice(0, 10)) ||
+                    (expirationDate.toISOString().slice(0, 10) <= currentDate.toISOString().slice(0, 10) && source === EventBridgeScheduleSource)
+                ) {
 
                     try {
                         const expireOptionTransactItems = await expireOptionPosition(position, expirationDate.toISOString(), tableName);
