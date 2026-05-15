@@ -1,7 +1,7 @@
 import { summarizePositions } from "@shared/business/summarizePositions";
 import { getItemsByPKandSK, putItem, TABLE_NAME } from "@shared/clients/dynamoDb";
 import { UserMetadata } from "@shared/models/user";
-import { metadataPartitionKey, userSortKey } from "@shared/utils/getKeys";
+import { ApiGatewaySource, EventBridgeScheduleSource, metadataPartitionKey, userSortKey } from "@shared/utils/getKeys";
 import { parseEvent } from "@shared/utils/parseEvent";
 import { badRequest, internalError, ok } from "@shared/utils/response";
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from "aws-lambda";
@@ -23,7 +23,7 @@ export const summarizePositionHandler = async (event: any):
             if (!result.success) return badRequest(result.error);
 
             const { body, userId, stage } = result.data;
-            const results = await summarizePositions(userId, TABLE_NAME(), 'API Gateway');
+            const results = await summarizePositions(userId, TABLE_NAME(), ApiGatewaySource);
 
             return ok(results);
 
@@ -41,7 +41,7 @@ export const summarizePositionHandler = async (event: any):
                 const users = await getItemsByPKandSK<UserMetadata>(metadataPartitionKey, userSortKey, TABLE_NAME());
 
                 for (const user of users) {
-                    await summarizePositions(user.userId, TABLE_NAME(), 'EventBridge');
+                    await summarizePositions(user.userId, TABLE_NAME(), EventBridgeScheduleSource);
                 }
 
                 return { ok: true, message: 'Successfully summarized all Positions' };
