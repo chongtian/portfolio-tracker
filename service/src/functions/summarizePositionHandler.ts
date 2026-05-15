@@ -4,21 +4,18 @@ import { UserMetadata } from "@shared/models/user";
 import { metadataPartitionKey, userSortKey } from "@shared/utils/getKeys";
 import { parseEvent } from "@shared/utils/parseEvent";
 import { badRequest, internalError, ok } from "@shared/utils/response";
-import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult, EventBridgeEvent } from "aws-lambda";
+import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from "aws-lambda";
 
-type ApiEvent = APIGatewayProxyEventV2WithJWTAuthorizer;
-
-type SchedulerDetail = {
+type ScheduleEventPayload = {
     action: string;
 };
 
-type SchedulerEvent = EventBridgeEvent<"Scheduled Event", SchedulerDetail>;
-
 const isApiGatewayEvent = (event: any): event is APIGatewayProxyEventV2WithJWTAuthorizer => event?.requestContext?.http !== undefined;
-const isEventBridgeEvent = (event: any): event is SchedulerEvent => event?.source === "aws.events";
+const isEventBridgeEvent = (event: any): event is ScheduleEventPayload => !!event?.action;
 
-export const summarizePositionHandler = async (event: ApiEvent | SchedulerEvent):
+export const summarizePositionHandler = async (event: any):
     Promise<APIGatewayProxyResult | { ok: boolean; message: string }> => {
+
     if (isApiGatewayEvent(event)) {
 
         try {
@@ -38,8 +35,7 @@ export const summarizePositionHandler = async (event: ApiEvent | SchedulerEvent)
     }
 
     if (isEventBridgeEvent(event)) {
-        const { action } = event.detail;
-        if (action === 'summarize_positions') {
+        if (event.action === 'summarize_positions') {
             try {
 
                 const users = await getItemsByPKandSK<UserMetadata>(metadataPartitionKey, userSortKey, TABLE_NAME());
@@ -54,38 +50,9 @@ export const summarizePositionHandler = async (event: ApiEvent | SchedulerEvent)
                 console.error(error);
                 return { ok: false, message: 'Failed to summarize all Positions' };
             }
-        } else {
-            try {
-                await putItem(
-                    {
-                        PK: 'SYSTEM',
-                        SK: `LOG#EVENTBRIDGE#${(new Date()).toISOString()}`,
-                        action: action,
-                        detail: event.detail
-                    },
-                    TABLE_NAME());
-            }
-            catch (error) {
-                console.error(error);
-            } finally {
-                return { ok: false, message: 'Failed to process event.' };
-            }
-        }
+        } 
     }
 
-    // for triaging
-    try {
-        await putItem(
-            {
-                PK: 'SYSTEM',
-                SK: `LOG#EVENTBRIDGE#${(new Date()).toISOString()}`,
-                detail: event
-            },
-            TABLE_NAME());
-    }
-    catch (error) {
-        console.error(error);
-    }
-
-    throw new Error('Unsupported event source');
+    console.log("Full Event Structure:", JSON.stringify(event, null, 2));
+    throw new Error(`Unsupported event source. `);
 };
