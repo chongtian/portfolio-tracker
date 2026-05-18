@@ -7,7 +7,21 @@ type ValidateResult = {
 }
 
 export const validateTransaction = (input: TransactionInput): ValidateResult => {
-    const { transactionType, assetType } = input;
+    const { txnId, txnDate, accountId, instrumentId, transactionType, assetType } = input;
+
+    if (
+        !accountId ||
+        !transactionType ||
+        !assetType ||
+        !txnId ||
+        !txnDate
+    ) {
+        return { success: false, error: `Missing required fields` };
+    }
+
+    if (!instrumentId && assetType !== AssetType.CASH) {
+        return { success: false, error: "Missing instrumentId for non-cash transaction" };
+    }
 
     if (!([AssetType.STOCK, AssetType.OPTION, AssetType.CASH].includes(assetType))) {
         return { success: false, error: `Invalid asset type ${assetType}` };
@@ -45,7 +59,7 @@ export const validateTransaction = (input: TransactionInput): ValidateResult => 
         if (!([TransactionType.DEPOSIT, TransactionType.WITHDRAW, TransactionType.ADJUST, TransactionType.INTEREST].includes(transactionType))) {
             return { success: false, error: `Invalid transaction type ${transactionType} for asset type ${assetType}` };
         }
-        input.instrumentId = "_CASH"; 
+        input.instrumentId = "_CASH";
     }
 
     if (transactionType === TransactionType.SPLIT && (!input.splitRatio || input.splitRatio <= 0)) {

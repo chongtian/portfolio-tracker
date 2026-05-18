@@ -69,6 +69,7 @@ describe('createTransactionHandler', () => {
         stage: 'dev',
       },
     });
+    mockValidateTransaction.mockReturnValue({ success: false, error: `Missing required fields` });
 
     const response = await createTransactionHandler({} as any);
 

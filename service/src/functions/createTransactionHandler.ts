@@ -1,7 +1,7 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from "aws-lambda";
 import { parseEvent } from "@shared/utils/parseEvent";
 import { badRequest, internalError, internalErrorForDebug, okCreated } from "@shared/utils/response";
-import { AssetType, TransactionInput } from "@shared/models/transaction";
+import { TransactionInput } from "@shared/models/transaction";
 import { sendCommand, TABLE_NAME, TransactItems } from "@shared/clients/dynamoDb";
 import { EntityTypeTransaction, transactionPartitionKey, transactionSortKey } from "@shared/utils/getKeys";
 import { TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
@@ -19,24 +19,7 @@ export const createTransactionHandler = async (
         const { body, userId, stage } = result.data;
 
         const transactionInput = body as TransactionInput;
-        const { txnId, txnDate, accountId, instrumentId, transactionType, assetType } = transactionInput;
-
-        if (
-            !accountId ||
-            !transactionType ||
-            !assetType ||
-            !txnId ||
-            !txnDate
-        ) {
-            return badRequest("Missing required fields");
-        }
-
-        if (!instrumentId && assetType !== AssetType.CASH) {
-            return badRequest("Missing instrumentId for non-cash transaction");
-        }
-        if (instrumentId && assetType === AssetType.CASH) {
-            transactionInput.instrumentId = "_CASH";
-        }
+        const { txnId, txnDate, accountId } = transactionInput;
 
         const validateResult = validateTransaction(transactionInput);
         if (!validateResult.success) {
