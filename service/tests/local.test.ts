@@ -9,7 +9,7 @@ describe.skip('Get Current Market Price', () => {
     expect(price).toBeGreaterThan(0);
   });
 
-  test('cannot get the market price of an option', async () => {
+  test('returns the market price of an option', async () => {
     const price = await getCurrentMarketPrice('SPY260507P00700000');
     expect(price).toBeTruthy();
     expect(price).toBeGreaterThan(0);
