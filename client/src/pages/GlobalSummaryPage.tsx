@@ -105,9 +105,9 @@ export default function GlobalSummaryPage() {
   const pieDataUnrealizedProfit = useMemo(() => {
     if (!summary) return []
 
-    const positions = summary.positions.filter(p => (p.unrealizedPnl || 0) > 0).map((position) => ({
+    const positions = summary.positions.filter(p => (p.unrealizedPnl || 0) > 0 && (p.unrealizedPnl || 0) * (p.quantity || 0) > 0).map((position) => ({
       name: position.instrumentId,
-      value: position.unrealizedPnl,
+      value: Math.abs(position.unrealizedPnl || 0),
     }))
 
     return cleanUpPieData(positions, chartColors.length)
@@ -116,9 +116,9 @@ export default function GlobalSummaryPage() {
   const pieDataUnrealizedLoss = useMemo(() => {
     if (!summary) return []
 
-    const positions = summary.positions.filter(p => (p.unrealizedPnl || 0) < 0).map((position) => ({
+    const positions = summary.positions.filter(p => (p.unrealizedPnl || 0) < 0 && (p.unrealizedPnl || 0) * (p.quantity || 0) < 0).map((position) => ({
       name: position.instrumentId,
-      value: position.unrealizedPnl,
+      value: Math.abs(position.unrealizedPnl || 0),
     }))
 
     return cleanUpPieData(positions, chartColors.length)
@@ -250,7 +250,7 @@ export default function GlobalSummaryPage() {
                       <Cell key={`slice-${index}`} fill={chartColors[index % chartColors.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => formatCurrency(value ? parseFloat(value.toString()) : null)} />
+                  <Tooltip formatter={(value) => 'Loss: ' + formatCurrency(value ? parseFloat(value.toString()) : null)} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
