@@ -2,18 +2,24 @@ import { describe, expect, test } from '@jest/globals';
 import { getCurrentMarketPrice } from '../src/shared/utils/getMarketPrice';
 import { preciseRound } from '../src/shared/utils/mathHelper';
 
-// describe.skip('Get Current Market Price', () => {
+// describe('Get Current Market Price', () => {
 //   test('returns the market price of a stock/etf', async () => {
 //     const price = await getCurrentMarketPrice('GOOG');
 //     expect(price).toBeTruthy();
 //     expect(price).toBeGreaterThan(0);
 //   });
 
-//   test('returns the market price of an option', async () => {
-//     const price = await getCurrentMarketPrice('SPY260507P00700000');
+//   test('returns the market price of a matual fund', async () => {
+//     const price = await getCurrentMarketPrice('VTIVX');
 //     expect(price).toBeTruthy();
 //     expect(price).toBeGreaterThan(0);
-//   });
+//   });  
+
+//   // test('returns the market price of an option', async () => {
+//   //   const price = await getCurrentMarketPrice('SPY260507P00700000');
+//   //   expect(price).toBeTruthy();
+//   //   expect(price).toBeGreaterThan(0);
+//   // });
 
 // });
 
