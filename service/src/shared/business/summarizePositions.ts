@@ -16,6 +16,8 @@ export const summarizePositions = async (userId: string, tableName: string, sour
     const accounts = await getItemsByPK<AccountEntity>(accountPartitionKey(userId), tableName, EntityTypeAccount);
     currentDate = currentDate || new Date();
 
+    let apiCallTime = (new Date()).getTime();
+
     const priceCache: Record<string, number> = {};
 
     // check if other process has locked the table
@@ -103,17 +105,27 @@ export const summarizePositions = async (userId: string, tableName: string, sour
             }
             else {
                 // messages[accountId] += `\nGetting market price for instrument ${instrumentId}.`;
-                let price = await getCurrentMarketPrice(instrumentId);
-                if (price) {
-                    logs[accountId] += `\nMarket price for instrument ${instrumentId} is ${price}`;
+
+                const waitTime = Math.max(0, 2000 - Math.abs((new Date).getTime() - apiCallTime));
+                if (waitTime > 0) {
+                    await new Promise(res => setTimeout(res, waitTime));
+                }
+                const marketPriceData = await getCurrentMarketPrice(instrumentId);
+                apiCallTime = (new Date).getTime();
+                
+                if (marketPriceData.success) {
+                    const price = marketPriceData.price;
+                    priceCache[instrumentId] = price!;
+                    position.marketPrice = price!;
+                    logs[accountId] += `\nMarket price for ${instrumentId} is ${price} on ${marketPriceData.asOfDate}, from ${marketPriceData.source}`;
                 } else {
-                    logs[accountId] += `\nMarket price not available for instrument ${instrumentId}`;
-                    price = position.totalCost / position.quantity / getMultipler(instrumentId); // fallback to average cost if market price not available    
-                    logs[accountId] += `\nUsing average cost as market price for instrument ${instrumentId}: ${price}`;
+                    logs[accountId] += `\nMarket price not available for ${instrumentId}: ${marketPriceData.message}`;
+                    const price = position.totalCost / position.quantity / getMultipler(instrumentId); // fallback to average cost if market price not available    
+                    logs[accountId] += `\nUsing average cost as market price for ${instrumentId}: ${price}`;
+                    priceCache[instrumentId] = price;
+                    position.marketPrice = price;
                 }
 
-                priceCache[instrumentId] = price;
-                position.marketPrice = price;
             }
 
             if (position.marketPrice) {

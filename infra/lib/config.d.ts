@@ -2,6 +2,9 @@ export interface Config {
     cognitoIssuerUrl: string;
     cognitoClientId: string;
     lambdaRoleArn: string;
+    marketDataApiKey: string;
+    alphaVantageApiKey: string;
+    clientBaseUrl: string;
 }
 /**
  * Loads and validates configuration from environment variables.
