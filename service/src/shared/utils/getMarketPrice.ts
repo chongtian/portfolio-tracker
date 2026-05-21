@@ -12,6 +12,35 @@ interface MarketDataOptionResponse {
     last: number[]; // last price
 };
 
+const getMarketPriceFromYahoo = async (instrumentId: string): Promise<number | null> => {
+    console.debug("api key does not exist or api call failed, fall back to the temporary solution.");
+
+    if (parseOptionContract(instrumentId)) {
+        console.debug(`Instrument ${instrumentId} is an option contract, fetching market price has not been implemented...`);
+        return null;
+    }
+
+    const url = `https://finance.yahoo.com/quote/${instrumentId}/`;
+    const webSource = await fetch(url).then(res => res.text()).catch(err => {
+        console.error(`Error fetching market price for ${instrumentId}:`, err);
+        return null;
+    });
+
+    if (webSource) {
+        const re = /data-testid="qsp-price">(.+?)<\/span>/;
+        const match = webSource.match(re);
+        if (match && match[1]) {
+            console.debug(`Market price found for ${instrumentId}: ${match[1]}`);
+            return parseFloat(match[1].trim());
+        }
+        console.error(`Market price not found in web source for ${instrumentId}`);
+    } else {
+        console.error(`Failed to read web source for ${instrumentId}`);
+    }
+
+    return null;
+}
+
 export const getCurrentMarketPrice = async (instrumentId: string): Promise<number | null> => {
 
     let price: number | null = null;
@@ -50,61 +79,67 @@ export const getCurrentMarketPrice = async (instrumentId: string): Promise<numbe
             }
 
         } else {
-            const from = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10); // 5th day before today
-            const to = (new Date()).toISOString().slice(0, 10);
-            // if the length of symbol >=5, it is almost positive this is a mutual fund
-            const url = instrumentId.length >= 5 ?
-                `https://api.marketdata.app/v1/funds/candles/D/${instrumentId}/?from=${from}&to=${to}` :
-                `https://api.marketdata.app/v1/stocks/candles/D/${instrumentId}/?from=${from}&to=${to}`;
-            console.debug(`Calling API: ${url}`);
 
-            const res = await fetch(url, {
-                method: "GET",
-                headers: { Authorization: `Bearer ${marketDataApiKey}`, Accept: "application/json" },
-            });
+            if (instrumentId.length >= 5) {
+                // if the length of symbol >=5, it is almost positive this is a mutual fund
+                const from = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10); // 5th day before today
+                const to = (new Date()).toISOString().slice(0, 10);
+                const url = `https://api.marketdata.app/v1/funds/candles/D/${instrumentId}/?from=${from}&to=${to}`;
+                console.debug(`Calling API: ${url}`);
 
-            if (!res.ok) {
-                const errText = await res.text();
-                console.error(`Failed to get market price from api for ${instrumentId}: ${errText}`);
-            } else {
-                const data = (await res.json()) as MarketDataStockResponse;
-                if (data && data.s === 'ok' && data.c && data.c.length > 0) {
-                    price = data.c[data.c.length - 1]!;
+                const res = await fetch(url, {
+                    method: "GET",
+                    headers: { Authorization: `Bearer ${marketDataApiKey}`, Accept: "application/json" },
+                });
+
+                if (!res.ok) {
+                    const errText = await res.text();
+                    console.error(`Failed to get market price from api for ${instrumentId}: ${errText}`);
                 } else {
-                    console.debug(`Failed to get market price from api for ${instrumentId}.`);
+                    const data = (await res.json()) as MarketDataStockResponse;
+                    if (data && data.s === 'ok' && data.c && data.c.length > 0) {
+                        price = data.c[data.c.length - 1]!;
+                    } else {
+                        console.debug(`Failed to get market price from api for ${instrumentId}.`);
+                    }
                 }
+            } else {
+                // Yahoo finance works for Stock only
+                return await getMarketPriceFromYahoo(instrumentId);
             }
+
+            // const from = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10); // 5th day before today
+            // const to = (new Date()).toISOString().slice(0, 10);
+            // // if the length of symbol >=5, it is almost positive this is a mutual fund
+            // const url = instrumentId.length >= 5 ?
+            //     `https://api.marketdata.app/v1/funds/candles/D/${instrumentId}/?from=${from}&to=${to}` :
+            //     `https://api.marketdata.app/v1/stocks/candles/D/${instrumentId}/?from=${from}&to=${to}`;
+            // console.debug(`Calling API: ${url}`);
+
+            // const res = await fetch(url, {
+            //     method: "GET",
+            //     headers: { Authorization: `Bearer ${marketDataApiKey}`, Accept: "application/json" },
+            // });
+
+            // if (!res.ok) {
+            //     const errText = await res.text();
+            //     console.error(`Failed to get market price from api for ${instrumentId}: ${errText}`);
+            // } else {
+            //     const data = (await res.json()) as MarketDataStockResponse;
+            //     if (data && data.s === 'ok' && data.c && data.c.length > 0) {
+            //         price = data.c[data.c.length - 1]!;
+            //     } else {
+            //         console.debug(`Failed to get market price from api for ${instrumentId}.`);
+            //     }
+            // }
         }
 
     }
 
-    if (!price) {
+    // if (!price) {
 
-        console.debug("api key does not exist or api call failed, fall back to the temporary solution.");
-
-        if (parseOptionContract(instrumentId)) {
-            console.debug(`Instrument ${instrumentId} is an option contract, fetching market price has not been implemented...`);
-            return null;
-        }
-
-        const url = `https://finance.yahoo.com/quote/${instrumentId}/`;
-        const webSource = await fetch(url).then(res => res.text()).catch(err => {
-            console.error(`Error fetching market price for ${instrumentId}:`, err);
-            return null;
-        });
-
-        if (webSource) {
-            const re = /data-testid="qsp-price">(.+?)<\/span>/;
-            const match = webSource.match(re);
-            if (match && match[1]) {
-                console.debug(`Market price found for ${instrumentId}: ${match[1]}`);
-                return parseFloat(match[1].trim());
-            }
-            console.error(`Market price not found in web source for ${instrumentId}`);
-        } else {
-            console.error(`Failed to read web source for ${instrumentId}`);
-        }
-    }
+    //     return await getMarketPriceFromYahoo(instrumentId);
+    // }
 
     return price;
 }

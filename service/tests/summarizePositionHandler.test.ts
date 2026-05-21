@@ -49,7 +49,7 @@ describe('summarizePositionHandler', () => {
 
     expect(response).toEqual({ ok: true, message: 'Successfully summarized all Positions' });
     expect(mockSummarizePositions).toHaveBeenCalledTimes(1);
-    expect(mockSummarizePositions).toHaveBeenCalledWith('user-1', 'TestTable', 'EventBridge');
+    expect(mockSummarizePositions).toHaveBeenCalledWith('user-1', 'TestTable', 'EventBridge Schedule');
   });
 
   test('throws when event source is unsupported', async () => {
