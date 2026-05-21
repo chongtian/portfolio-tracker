@@ -4,15 +4,17 @@ import { preciseRound } from '../src/shared/utils/mathHelper';
 
 // describe('Get Current Market Price', () => {
 //   test('returns the market price of a stock/etf', async () => {
-//     const price = await getCurrentMarketPrice('GOOG');
-//     expect(price).toBeTruthy();
-//     expect(price).toBeGreaterThan(0);
+//     const priceData = await getCurrentMarketPrice('GOOG');
+//     expect(priceData.success).toBeTruthy();
+//     expect(priceData.price).toBeGreaterThan(0);
+//     expect(priceData.asOfDate).toBeTruthy();
 //   });
 
 //   test('returns the market price of a matual fund', async () => {
-//     const price = await getCurrentMarketPrice('VTIVX');
-//     expect(price).toBeTruthy();
-//     expect(price).toBeGreaterThan(0);
+//     const priceData = await getCurrentMarketPrice('VTIVX');
+//     expect(priceData.success).toBeTruthy();
+//     expect(priceData.price).toBeGreaterThan(0);
+//     expect(priceData.asOfDate).toBeTruthy();
 //   });  
 
 //   // test('returns the market price of an option', async () => {
