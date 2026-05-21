@@ -17,7 +17,7 @@ on:
         type: boolean
         default: false
       test_only:
-        description: 'Run Tests Only'
+        description: 'Run UI Tests Only'
         type: boolean
         default: false         
 
@@ -40,6 +40,11 @@ jobs:
           cd service && npm ci
           cd ../client && npm ci
           cd ../infra && npm ci
+
+      - name: Run unit tests for service
+        if: github.event.inputs.test_only != 'true'
+        run: |
+          cd service && npm run test         
 
       - name: Configure AWS Credentials
         if: github.event.inputs.test_only != 'true'
