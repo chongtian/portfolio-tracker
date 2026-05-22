@@ -208,7 +208,7 @@ export class PortfolioTrackerStack extends cdk.Stack {
         TABLE_NAME: tableName,
         STAGE: stage,
         MARKETDATA_API_KEY: config.marketDataApiKey,
-        ALPHA_VANTAGE_API_KEY: config.alphaVantageApiKey
+        // ALPHA_VANTAGE_API_KEY: config.alphaVantageApiKey
       },
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,

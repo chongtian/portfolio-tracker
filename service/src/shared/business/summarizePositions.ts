@@ -17,7 +17,7 @@ export const summarizePositions = async (userId: string, tableName: string, sour
     const accounts = await getItemsByPK<AccountEntity>(accountPartitionKey(userId), tableName, EntityTypeAccount);
     currentDate = currentDate || new Date();
 
-    let apiCallTime = (new Date()).getTime();
+    // let apiCallTime = (new Date()).getTime();
 
     const priceCache: Record<string, number> = {};
 
@@ -107,12 +107,12 @@ export const summarizePositions = async (userId: string, tableName: string, sour
             else {
                 // messages[accountId] += `\nGetting market price for instrument ${instrumentId}.`;
 
-                const waitTime = Math.max(0, 2000 - Math.abs((new Date).getTime() - apiCallTime));
-                if (waitTime > 0) {
-                    await setTimeout(waitTime);
-                }
+                // const waitTime = Math.max(0, 1000 - Math.abs((new Date).getTime() - apiCallTime));
+                // if (waitTime > 0) {
+                //     await setTimeout(waitTime);
+                // }
                 const marketPriceData = await getCurrentMarketPrice(instrumentId);
-                apiCallTime = (new Date).getTime();
+                // apiCallTime = (new Date).getTime();
                 
                 if (marketPriceData.success) {
                     const price = marketPriceData.price;
