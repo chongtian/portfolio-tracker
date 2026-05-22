@@ -9,6 +9,7 @@ import { expireOptionPosition } from "./expireOptionPosition";
 import { getMultipler } from "@shared/utils/getMultipler";
 import { SummaryEntity } from "@shared/models/summary";
 import { preciseRound } from "@shared/utils/mathHelper";
+import { setTimeout } from 'timers/promises';
 
 export const summarizePositions = async (userId: string, tableName: string, source?: string, currentDate?: Date): Promise<Record<string, string>> => {
 
@@ -108,7 +109,7 @@ export const summarizePositions = async (userId: string, tableName: string, sour
 
                 const waitTime = Math.max(0, 2000 - Math.abs((new Date).getTime() - apiCallTime));
                 if (waitTime > 0) {
-                    await new Promise(res => setTimeout(res, waitTime));
+                    await setTimeout(waitTime);
                 }
                 const marketPriceData = await getCurrentMarketPrice(instrumentId);
                 apiCallTime = (new Date).getTime();
