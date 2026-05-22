@@ -11,7 +11,7 @@ export interface Config {
   cognitoClientId: string;
   lambdaRoleArn: string;
   marketDataApiKey: string;
-  alphaVantageApiKey: string;
+  // alphaVantageApiKey: string;
   clientBaseUrl: string;
 }
 
@@ -25,7 +25,7 @@ export function loadConfig(): Config {
   const cognitoClientId = process.env.COGNITO_CLIENT_ID;
   const lambdaRoleArn = process.env.LAMBDA_ROLE_ARN;
   const marketDataApiKey = process.env.MARKETDATA_API_KEY;
-  const alphaVantageApiKey = process.env.ALPHA_VANTAGE_API_KEY;
+  // const alphaVantageApiKey = process.env.ALPHA_VANTAGE_API_KEY;
   const clientBaseUrl = process.env.CLIENT_BASE_URL;
 
   const missingVars = [];
@@ -33,7 +33,7 @@ export function loadConfig(): Config {
   if (!cognitoClientId) missingVars.push('COGNITO_CLIENT_ID');
   if (!lambdaRoleArn) missingVars.push('LAMBDA_ROLE_ARN');
   if (!marketDataApiKey) missingVars.push('MARKETDATA_API_KEY');
-  if (!alphaVantageApiKey) missingVars.push('ALPHA_VANTAGE_API_KEY');
+  // if (!alphaVantageApiKey) missingVars.push('ALPHA_VANTAGE_API_KEY');
   if (!clientBaseUrl) missingVars.push('CLIENT_BASE_URL');
 
   if (missingVars.length > 0) {
@@ -49,7 +49,7 @@ export function loadConfig(): Config {
     cognitoClientId: cognitoClientId!,
     lambdaRoleArn: lambdaRoleArn!,
     marketDataApiKey: marketDataApiKey!,
-    alphaVantageApiKey: alphaVantageApiKey!,
+    // alphaVantageApiKey: alphaVantageApiKey!,
     clientBaseUrl: clientBaseUrl!,
   };
 }

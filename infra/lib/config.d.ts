@@ -3,7 +3,7 @@ export interface Config {
     cognitoClientId: string;
     lambdaRoleArn: string;
     marketDataApiKey: string;
-    alphaVantageApiKey: string;
+    // alphaVantageApiKey: string;
     clientBaseUrl: string;
 }
 /**
