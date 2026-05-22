@@ -1,7 +1,7 @@
 import { MarketPrice } from "@shared/models/marketPrice";
 import { getStockFundPriceFromAlphaVantage } from "./alphaVantageApiHelper";
 import { parseOptionContract } from "./parseOptionContract";
-import { getOptionContractPrice } from "./marketDataApiHelper";
+import { getFundStockHistoricalPrice, getOptionContractPrice, getStockPrice } from "./marketDataApiHelper";
 
 export const getCurrentMarketPrice = async (instrumentId: string): Promise<MarketPrice> => {
 
@@ -17,9 +17,15 @@ export const getCurrentMarketPrice = async (instrumentId: string): Promise<Marke
         return await getOptionContractPrice(optionContract, marketDataApiKey);
 
     } else {
-        // use Alpha Vantage API to get price for stock, etf, and mutual fund
-        // still under testing, unsure if the price data has any delay
-        return await getStockFundPriceFromAlphaVantage(instrumentId, alphaVantageApiKey);
+
+        if (instrumentId.length > 4) {
+            // this is a mutual fund, use Market Data API to get price for mutual fund
+            // the price is 1-day older
+            return await getFundStockHistoricalPrice(instrumentId, marketDataApiKey);
+        } else {
+            // use Market Data API to get realtime price for stock
+            return await getStockPrice(instrumentId, marketDataApiKey);
+        }
 
     }
 
