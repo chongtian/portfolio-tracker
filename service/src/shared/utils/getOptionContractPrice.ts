@@ -1,5 +1,5 @@
 import { MarketPrice } from "@shared/models/marketPrice";
-import { spawn } from "child_process";
+// import { spawn } from "child_process";
 
 interface OptionWatchApiResponse {
     [instrumentId: string]: OptionPriceData;
@@ -18,39 +18,39 @@ interface OptionPriceData {
     previousClose: number;
 }
 
-const fetchOptionDataWithCurl = async (instrumentId: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const curl = spawn("curl", [
-            "https://api.optionwatch.io/api/universal_snapshot",
-            "-H", "content-type: application/json",
-            "-H", "origin: https://optionwatch.io",
-            "-H", "referer: https://optionwatch.io/",
-            "-H", "user-agent: Mozilla/5.0",
-            "--data-raw", JSON.stringify({
-                contracts: [instrumentId]
-            })
-        ]);
+// const fetchOptionDataWithCurl = async (instrumentId: string): Promise<string> => {
+//     return new Promise((resolve, reject) => {
+//         const curl = spawn("curl", [
+//             "https://api.optionwatch.io/api/universal_snapshot",
+//             "-H", "content-type: application/json",
+//             "-H", "origin: https://optionwatch.io",
+//             "-H", "referer: https://optionwatch.io/",
+//             "-H", "user-agent: Mozilla/5.0",
+//             "--data-raw", JSON.stringify({
+//                 contracts: [instrumentId]
+//             })
+//         ]);
 
-        let output = "";
-        let error = "";
+//         let output = "";
+//         let error = "";
 
-        curl.stdout.on("data", (data) => {
-            output += data.toString();
-        });
+//         curl.stdout.on("data", (data) => {
+//             output += data.toString();
+//         });
 
-        curl.stderr.on("data", (data) => {
-            error += data.toString();
-        });
+//         curl.stderr.on("data", (data) => {
+//             error += data.toString();
+//         });
 
-        curl.on("close", (code) => {
-            if (code === 0) {
-                resolve(output);
-            } else {
-                reject(new Error(error));
-            }
-        });
-    });
-}
+//         curl.on("close", (code) => {
+//             if (code === 0) {
+//                 resolve(output);
+//             } else {
+//                 reject(new Error(error));
+//             }
+//         });
+//     });
+// }
 
 export const getOptionContractPriceFromOptionWatch = async (instrumentId: string): Promise<MarketPrice> => {
 
