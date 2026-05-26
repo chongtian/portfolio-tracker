@@ -9,11 +9,6 @@ export interface GlobalDetail {
   pnlHistory?: PnLEntity[];
 }
 
-export interface HistoryPoint {
-  date: string
-  value: number
-}
-
 export interface AccountPayload {
   accountName: string;
   brokerName?: string;
@@ -29,3 +24,12 @@ export interface QueryResult<T> {
   nextToken?: string;
 }
 
+export interface EventLog {
+  PK: string;
+  SK: string;
+  createdAt: string;
+  event: string;
+  logs?: Record<string, string>;
+  source: string;
+  isProcessing?: boolean;
+}

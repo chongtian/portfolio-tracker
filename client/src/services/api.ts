@@ -3,7 +3,7 @@ import type { AccountDetail, AccountEntity } from '../models/account';
 import type { PnLEntity } from '../models/pnl';
 import type { SummaryEntity } from '../models/summary';
 import type { TransactionEntity } from '../models/transaction';
-import type { AccountPayload, QueryResult } from '../models/types'
+import type { AccountPayload, EventLog, QueryResult } from '../models/types'
 import { validateOrRefreshSession } from './cognitoAuth';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || API_BASE_URL
@@ -131,6 +131,10 @@ export async function deleteTransaction(transactionId: string): Promise<boolean>
   return await requestWithoutContent(`/transaction/${encodeURIComponent(transactionId)}`, {
     method: 'DELETE',
   })
+}
+
+export async function fetchLogsForSummarization(): Promise<EventLog[]> {
+  return jsonRequest<EventLog[]>('/logs?event=summarize_positions');
 }
 
 export async function triggerSummarization(): Promise<Record<string, string>> {

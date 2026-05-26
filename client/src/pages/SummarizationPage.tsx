@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { triggerSummarization } from '../services/api'
+import { fetchLogsForSummarization, triggerSummarization } from '../services/api'
 import './PageStyles.css'
 import { useAccounts } from '../hooks/useAccounts'
 import { useGlobalLoading } from '../hooks/LoadingContext'
@@ -15,6 +15,31 @@ export default function SummarizationPage() {
 
   const [status, setStatus] = useState('idle')
   const [messages, setMessage] = useState([] as string[])
+
+  useState(() => {
+    startLoading()
+    fetchLogsForSummarization().then(
+      data => {
+        // there shall be only one log
+        if (data && data[0]) {
+          const log = data[0]
+          const message = []
+          message.push(`source: ${log.source}`, `last run: ${(new Date(log.createdAt)).toLocaleString()}`, `isProcessing: ${log.isProcessing ?? false}`)
+          if (log.logs) {
+            for (const [key, value] of Object.entries(log.logs)) {
+              const msgs = value.split('\n').map(m => `${accountMap.get(key) || 'Unknown'}: ${m}`)
+              message.push(...msgs)
+            }
+          }
+          setMessage(message)
+        }
+      }
+    ).catch(
+      err => {
+        console.error(err)
+      }
+    ).finally(stopLoading)
+  })
 
   const handleTrigger = async () => {
     const confirm = window.confirm('This will trigger a back-end summarization process. Continue?')
