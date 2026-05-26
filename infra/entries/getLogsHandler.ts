@@ -1,0 +1,1 @@
+export {getLogsHandler} from '../../service/src/functions/getLogsHandler';

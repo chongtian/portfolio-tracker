@@ -228,6 +228,20 @@ export class PortfolioTrackerStack extends cdk.Stack {
       memorySize: 256,
     });
 
+    const getLogsFn = new NodejsFunction(this, 'GetLogsHandler', {
+      functionName: functionName(stage, 'getLogs'),
+      entry: path.resolve(__dirname, '../../entries/getLogsHandler.ts'),
+      handler: 'getLogsHandler',
+      runtime: lambda.Runtime.NODEJS_24_X,
+      role: lambdaRole,
+      environment: {
+        TABLE_NAME: tableName,
+        STAGE: stage
+      },
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+    });    
+
     const listHistoryFn = new NodejsFunction(this, 'ListHistoryHandler', {
       functionName: functionName(stage, 'listHistory'),
       entry: path.resolve(__dirname, '../../entries/listHistoryHandler.ts'),
@@ -343,6 +357,11 @@ export class PortfolioTrackerStack extends cdk.Stack {
       getTransactionFn
     );
 
+    const getLogsIntegration = new integrations.HttpLambdaIntegration(
+      'GetLogsIntegration',
+      getLogsFn
+    );    
+
     const summarizePositionIntegration = new integrations.HttpLambdaIntegration(
       'SummarizePositionIntegration',
       summarizePositionFn
@@ -422,6 +441,13 @@ export class PortfolioTrackerStack extends cdk.Stack {
       integration: getTransactionIntegration,
       authorizer: jwtAuthorizer,
     });
+
+    api.addRoutes({
+      path: '/portfolio/logs',
+      methods: [apigatewayv2.HttpMethod.GET],
+      integration: getLogsIntegration,
+      authorizer: jwtAuthorizer,
+    });    
 
     api.addRoutes({
       path: '/portfolio/summarize-position',
@@ -571,6 +597,11 @@ export class PortfolioTrackerStack extends cdk.Stack {
       value: getTransactionFn.functionName,
       description: 'Get Transaction Lambda function name',
     });
+
+    new cdk.CfnOutput(this, 'GetLogsFunctionName', {
+      value: getLogsFn.functionName,
+      description: 'Get Logs Lambda function name',
+    });    
 
     new cdk.CfnOutput(this, 'ListPositionsFunctionName', {
       value: listPositionsFn.functionName,
