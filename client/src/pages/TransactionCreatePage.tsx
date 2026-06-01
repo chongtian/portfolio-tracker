@@ -33,12 +33,6 @@ export default function TransactionCreatePage() {
   const { startLoading, stopLoading } = useGlobalLoading()
   const { state } = useAccounts()
   const { accounts } = state
-  // if (loading) {
-  //   startLoading()
-  // } else {
-  //   stopLoading()
-  // }
-
   const [step, setStep] = useState(1)
   const [assetType, setAssetType] = useState<typeof assetTypes[number]>('STOCK')
   const [transactionType, setTransactionType] = useState<string>('BUY')
@@ -101,6 +95,19 @@ export default function TransactionCreatePage() {
       setForm((current) => ({ ...current, cashCollateral: strike * current.quantity * OptionMultipler }))
     }
   }, [assetType, transactionType, optionContract.callPut, optionContract.strike, form.quantity])
+
+  useEffect(() => {
+    // Reset transaction type to a valid option when asset type changes
+    if (assetType === 'CASH') {
+      setTransactionType('INTEREST')
+    } else if (assetType === 'OPTION') {
+      setTransactionType('BUY')
+      setForm((current) => ({ ...current, instrumentId: '' }))
+    } else {
+      setTransactionType('BUY')
+      setForm((current) => ({ ...current, instrumentId: '' }))
+    }
+  }, [assetType])
 
   const transactionOptions = useMemo(() => {
     if (assetType === 'STOCK') return stockTypes
