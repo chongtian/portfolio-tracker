@@ -211,7 +211,7 @@ export default function GlobalSummaryPage() {
               <h2>Value breakdown</h2>
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
-                  <Pie data={pieDataValue} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100}
+                  <Pie data={pieDataValue} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={95}
                     label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} >
                     {pieDataValue.map((_, index) => (
                       <Cell key={`slice-${index}`} fill={chartColors[index % chartColors.length]} />
@@ -228,7 +228,7 @@ export default function GlobalSummaryPage() {
               <h2>Unrealized Profit breakdown</h2>
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
-                  <Pie data={pieDataUnrealizedProfit} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100}
+                  <Pie data={pieDataUnrealizedProfit} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={95}
                     label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} >
                     {pieDataUnrealizedProfit.map((_, index) => (
                       <Cell key={`slice-${index}`} fill={chartColors[index % chartColors.length]} />
@@ -244,7 +244,7 @@ export default function GlobalSummaryPage() {
               <h2>Unrealized Loss breakdown</h2>
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
-                  <Pie data={pieDataUnrealizedLoss} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100}
+                  <Pie data={pieDataUnrealizedLoss} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={95}
                     label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} >
                     {pieDataUnrealizedLoss.map((_, index) => (
                       <Cell key={`slice-${index}`} fill={chartColors[index % chartColors.length]} />

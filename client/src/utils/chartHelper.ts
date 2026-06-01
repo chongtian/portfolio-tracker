@@ -14,6 +14,14 @@ export function cleanUpPieData(
     data: { name: string, value: number | undefined }[],
     limit: number): { name: string, value: number | undefined }[] {
 
+    // merge options
+    const optionItems = data.filter((item) => item.name.length > 10)
+    if (optionItems.length > 0) {
+        const optionValue = optionItems.reduce((sum, item) => sum + (item.value || 0), 0)
+        data = data.filter((item) => item.name.length <= 10)
+        data.push({ name: 'Options', value: optionValue })
+    }
+
     // sort descending
     data.sort((a, b) => (b.value || 0) - (a.value || 0));
 
