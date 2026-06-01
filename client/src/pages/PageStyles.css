@@ -124,6 +124,22 @@
   border: 1px solid #e5e7eb;
   border-radius: 18px;
   padding: 20px;
+  overflow: visible;
+}
+
+.chart-card .recharts-responsive-container,
+.chart-card .recharts-surface {
+  overflow: visible !important;
+}
+
+@media (max-width: 420px) {
+  .chart-card {
+    min-height: 320px;
+  }
+
+  .chart-card svg text {
+    font-size: 0.75rem;
+  }
 }
 
 .summary-value {

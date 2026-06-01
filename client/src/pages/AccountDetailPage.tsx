@@ -184,7 +184,7 @@ export default function AccountDetailPage() {
               <h2>Value breakdown</h2>
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
-                  <Pie data={pieDataValue} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100}
+                  <Pie data={pieDataValue} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={95}
                     label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} >
                     {pieDataValue.map((_, index) => (
                       <Cell key={`slice-${index}`} fill={chartColors[index % chartColors.length]} />
