@@ -35,7 +35,7 @@ export default function AccountListPage() {
       <div className="page-header">
         <div>
           <h1>Accounts</h1>
-          <p>List all accounts in your portfolio.</p>
+          <p>List all active and inactive accounts in your portfolio.</p>
         </div>
         <Link to="/accounts/new" className="primary-button">
           Create account
