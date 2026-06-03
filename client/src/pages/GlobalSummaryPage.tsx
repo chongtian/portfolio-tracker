@@ -1,24 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchAccountDetails, fetchPnL } from '../services/api'
 import type { GlobalDetail } from '../models/types'
-import {
-  Pie, PieChart, ResponsiveContainer, Tooltip, Cell,
-  // Line,
-  // LineChart,
-  // XAxis,
-  // YAxis,
-  // CartesianGrid,
-  // Legend,
-} from 'recharts'
 import './PageStyles.css'
-import { formatCurrency } from '../utils/formatCurrency'
-import { cleanUpPieData, pieChartColors } from '../utils/chartHelper'
 import { useAccounts } from '../hooks/useAccounts'
 import type { PnLEntity } from '../models/pnl'
 import { sortPositions } from '../utils/sortPositions'
 import { useGlobalLoading } from '../hooks/LoadingContext'
-
-const chartColors = pieChartColors
+import SummaryCard from '../components/SummaryCard'
+import PositionCard from '../components/PositionsCard'
+import PositionPieChart from '../components/PositionPieChart'
 
 export default function GlobalSummaryPage() {
   const { startLoading, stopLoading } = useGlobalLoading()
@@ -96,10 +86,10 @@ export default function GlobalSummaryPage() {
       value: position.marketValue,
     }))
 
-    return cleanUpPieData([
+    return [
       ...positions,
       { name: 'Cash', value: summary.summary.totalCash },
-    ], chartColors.length)
+    ]
   }, [summary])
 
   const pieDataUnrealizedProfit = useMemo(() => {
@@ -110,7 +100,7 @@ export default function GlobalSummaryPage() {
       value: Math.abs(position.unrealizedPnl || 0),
     }))
 
-    return cleanUpPieData(positions, chartColors.length)
+    return positions
   }, [summary])
 
   const pieDataUnrealizedLoss = useMemo(() => {
@@ -121,24 +111,8 @@ export default function GlobalSummaryPage() {
       value: Math.abs(position.unrealizedPnl || 0),
     }))
 
-    return cleanUpPieData(positions, chartColors.length)
+    return positions
   }, [summary])
-
-  const pnlYtd = useMemo(() => {
-    return pnl?.filter(h => (h.closedDate || '0000-00-00') >= `${(new Date()).getFullYear()}-01-01`).reduce((sum, p) => sum = sum + p.realizedPnl, 0)
-  }, [pnl])
-
-  const pnl1yr = useMemo(() => {
-    return pnl?.reduce((sum, p) => sum = sum + p.realizedPnl, 0)
-  }, [pnl])
-
-  // const cashHistory = summary?.cashHistory?.map((point) => ({ name: point.date, value: point.value })) ?? [
-  //   { name: 'Current', value: summary?.availableCash ?? 0 },
-  // ]
-
-  // const netWorthHistory = summary?.netWorthHistory?.map((point) => ({ name: point.date, value: point.value })) ?? [
-  //   { name: 'Current', value: summary?.netWorth ?? 0 },
-  // ]
 
   return (
     <div className="page">
@@ -152,125 +126,19 @@ export default function GlobalSummaryPage() {
         <div className="info-card">Loading global summary…</div>
       ) : (
         <>
-          <section className="summary-grid">
-            <div className="summary-card">
-              <h2>Cash balance</h2>
-              <div className="summary-value">{formatCurrency(summary.summary.totalCash)}</div>
-            </div>
-            <div className="summary-card">
-              <h2>Available cash</h2>
-              <div className="summary-value">{formatCurrency(summary.summary.totalAvailableCash)}</div>
-            </div>
-            <div className="summary-card">
-              <h2>Net worth</h2>
-              <div className="summary-value">{formatCurrency(summary.summary.totalCash + summary.summary.totalPositionsValue)}</div>
-            </div>
-            <div className="summary-card">
-              <h2>Unrealized PnL</h2>
-              <div className="summary-value">{formatCurrency(summary.summary.unrealizedPnl)}</div>
-            </div>
-
-            <div className="summary-card">
-              <h2>Realized PnL YTD</h2>
-              <div className="summary-value">{formatCurrency(pnlYtd)}</div>
-            </div>
-
-            <div className="summary-card">
-              <h2>Realized PnL in one year</h2>
-              <div className="summary-value">{formatCurrency(pnl1yr)}</div>
-            </div>
-
-          </section>
-
-          <section className="table-card">
-            <h2>Positions</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Instrument</th>
-                  <th>Quantity</th>
-                  <th>Market value</th>
-                  <th>Unrealized PnL</th>
-                </tr>
-              </thead>
-              <tbody>
-                {summary.positions.map((position) => (
-                  <tr key={position.instrumentId}>
-                    <td>{position.instrumentId}</td>
-                    <td>{position.quantity}</td>
-                    <td>{formatCurrency(position.marketValue)}</td>
-                    <td>{formatCurrency(position.unrealizedPnl)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
+          <SummaryCard summary={summary.summary} pnl={pnl} />
+          <PositionCard positions={summary.positions} />
 
           <div className="chart-grid">
-            <div className="chart-card">
-              <h2>Value breakdown</h2>
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart>
-                  <Pie data={pieDataValue} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={95}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} >
-                    {pieDataValue.map((_, index) => (
-                      <Cell key={`slice-${index}`} fill={chartColors[index % chartColors.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => formatCurrency(value ? parseFloat(value.toString()) : null)} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            <PositionPieChart data={pieDataValue} title={"Value breakdown"} />
           </div>
 
           <div className="chart-grid">
-            <div className="chart-card">
-              <h2>Unrealized Profit breakdown</h2>
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart>
-                  <Pie data={pieDataUnrealizedProfit} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={95}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} >
-                    {pieDataUnrealizedProfit.map((_, index) => (
-                      <Cell key={`slice-${index}`} fill={chartColors[index % chartColors.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => formatCurrency(value ? parseFloat(value.toString()) : null)} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            <PositionPieChart data={pieDataUnrealizedProfit} title={"Unrealized Profit breakdown"} />
           </div>
           <div className="chart-grid">
-            <div className="chart-card">
-              <h2>Unrealized Loss breakdown</h2>
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart>
-                  <Pie data={pieDataUnrealizedLoss} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={95}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} >
-                    {pieDataUnrealizedLoss.map((_, index) => (
-                      <Cell key={`slice-${index}`} fill={chartColors[index % chartColors.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => 'Loss: ' + formatCurrency(value ? parseFloat(value.toString()) : null)} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            <PositionPieChart data={pieDataUnrealizedLoss} title={"Unrealized Loss breakdown"} />
           </div>
-
-          {/* <div className="chart-grid">
-            <div className="chart-card">
-              <h2>Net worth history</h2>
-              <ResponsiveContainer width="100%" height={320}>
-                <LineChart data={netWorthHistory} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="value" stroke="#16a34a" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div> */}
         </>
       )}
     </div>
