@@ -33,3 +33,19 @@ export interface EventLog {
   source: string;
   isProcessing?: boolean;
 }
+
+export interface NewsEventEntity {
+    PK: string;
+    SK: string;
+    createdAt: string;
+    entityType: string;
+    newsType: string;
+    userId: string;
+    instrumentId: string;
+    endDate: string;
+    recordDate?: string;
+    paymentDate?: string;
+    dividendAmount?: number;
+    currentPrice?: number;
+}
+

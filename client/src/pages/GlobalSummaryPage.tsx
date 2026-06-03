@@ -9,6 +9,7 @@ import { useGlobalLoading } from '../hooks/LoadingContext'
 import SummaryCard from '../components/SummaryCard'
 import PositionCard from '../components/PositionsCard'
 import PositionPieChart from '../components/PositionPieChart'
+import NewsList from '../components/NewsList'
 
 export default function GlobalSummaryPage() {
   const { startLoading, stopLoading } = useGlobalLoading()
@@ -128,6 +129,8 @@ export default function GlobalSummaryPage() {
         <>
           <SummaryCard summary={summary.summary} pnl={pnl} />
           <PositionCard positions={summary.positions} />
+
+          <NewsList />
 
           <div className="chart-grid">
             <PositionPieChart data={pieDataValue} title={"Value breakdown"} />

@@ -10,6 +10,7 @@ import { getMultipler } from "@shared/utils/getMultipler";
 import { SummaryEntity } from "@shared/models/summary";
 import { preciseRound } from "@shared/utils/mathHelper";
 import { setTimeout } from 'timers/promises';
+import { processNewsEventForDividend, processNewsEventForOption } from "./processNewsEvent";
 
 export const summarizePositions = async (userId: string, tableName: string, source?: string, currentDate?: Date): Promise<Record<string, string>> => {
 
@@ -17,7 +18,7 @@ export const summarizePositions = async (userId: string, tableName: string, sour
     const accounts = await getItemsByPK<AccountEntity>(accountPartitionKey(userId), tableName, EntityTypeAccount);
     currentDate = currentDate || new Date();
 
-    // let apiCallTime = (new Date()).getTime();
+    let apiCallTime = (new Date()).getTime();
 
     const priceCache: Record<string, number> = {};
 
@@ -96,6 +97,18 @@ export const summarizePositions = async (userId: string, tableName: string, sour
 
                     continue;
                 }
+
+                // for open option position, create option news
+                logs[accountId] += (await processNewsEventForOption(tableName, position.userId, optionContract, priceCache));
+            } else {
+                // create dividend news
+                try {
+                    logs[accountId] += (await processNewsEventForDividend(tableName, position.userId, instrumentId, apiCallTime));
+                    apiCallTime = (new Date()).getTime();
+                } catch (error) {
+                    console.error(`Failed to get dividend news for instrument ${instrumentId}:`, error);
+                    logs[accountId] += `\nFailed to get dividend news for instrument ${instrumentId}.`;
+                }
             }
 
             // get market price for the instrument
@@ -113,7 +126,7 @@ export const summarizePositions = async (userId: string, tableName: string, sour
                 // }
                 const marketPriceData = await getCurrentMarketPrice(instrumentId);
                 // apiCallTime = (new Date).getTime();
-                
+
                 if (marketPriceData.success) {
                     const price = marketPriceData.price;
                     priceCache[instrumentId] = price!;

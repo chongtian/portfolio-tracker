@@ -1,0 +1,1 @@
+export {getNewsHandler} from '../../service/src/functions/getNewsHandler';

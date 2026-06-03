@@ -6,6 +6,7 @@ import type { AccountDetail } from '../models/account'
 import { formatCurrency } from '../utils/formatCurrency'
 import { useAccounts } from '../hooks/useAccounts'
 import { useGlobalLoading } from '../hooks/LoadingContext'
+import NewsList from '../components/NewsList'
 
 export default function DashboardPage() {
   const [accountDetails, setAccounts] = useState<AccountDetail[]>([])
@@ -81,6 +82,8 @@ export default function DashboardPage() {
           </article>
         ))}
       </section>
+
+      <NewsList />
     </div>
   )
 }

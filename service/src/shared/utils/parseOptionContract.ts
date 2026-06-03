@@ -5,12 +5,12 @@ export const parseOptionContract = (optionContractStr: string): OptionContractEn
     const m = optionContractStr.match(re);
 
     if (!m) {
-        console.debug(`Not a valid instrument id for option contract: ${optionContractStr}`);
+        // console.debug(`Not a valid instrument id for option contract: ${optionContractStr}`);
         return null;
     } else {
         const [full, g1, g2, g3, g4] = m;
         if (!g1 || !g2 || !g3 || !g4) {
-            console.debug(`Not a valid instrument id for option contract: ${optionContractStr}`);
+            // console.debug(`Not a valid instrument id for option contract: ${optionContractStr}`);
             return null;
         }
 
