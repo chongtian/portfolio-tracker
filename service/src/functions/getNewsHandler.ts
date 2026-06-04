@@ -13,13 +13,15 @@ export const getNewsHandler = async (event: APIGatewayProxyEventV2WithJWTAuthori
 
         const { pathParameters, queryStringParameters, userId, stage } = result.data;
 
+        // return news start from 5 days ago
+        const cutoffDate = (new Date(Date.now() - 5 * 86400000)).toISOString().slice(0, 10);
         const param = {
             TableName: TABLE_NAME(),
             KeyConditionExpression: "PK = :pkValue AND SK >= :skValue",
             FilterExpression: "entityType = :entityType",
             ExpressionAttributeValues: {
                 ":pkValue": newsEventPartitionKey(userId),
-                ":skValue": newsEventSortKey((new Date()).toISOString().slice(0, 10)),
+                ":skValue": newsEventSortKey(cutoffDate),
                 ":entityType": EntityTypeNewsEvent
             }
         };
