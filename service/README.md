@@ -224,6 +224,7 @@ Regardless the outcome of an option contract is expired, executed, or assigned, 
 - listTransactionsHandler
 - summarizePositionHandler
 - getLogsHandler
+- getNewsHandler
 
 
 ## API Endpoints
@@ -253,3 +254,4 @@ GET|/account/{accountId}/summary|get the summary of the given account
 GET|/account/{accountId}/history/summary?startDate=&endDate=&pageSize=nextToken=|return a list of account summary history
 POST|/summarize-position|Retrieve market prices and update Positions, no payload is required
 GET|/logs?event=summarize_position|get logs from the specified event, at this time it only supports summarize_position       
+GET|/news|get dividend news from Alpha Vantage API; return price of underline stock of the open positions of option  

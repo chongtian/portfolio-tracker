@@ -271,7 +271,7 @@ export default function TransactionCreatePage() {
 
                 <label>
                   Strike
-                  <input name="strike" type="number" step="0.001" value={optionContract.strike} onChange={handleOptionChange} />
+                  <input name="strike" type="number" step="0.5" value={optionContract.strike} onChange={handleOptionChange} />
                 </label>
 
                 <p className="hint-text">Generated ID: {form.instrumentId || 'Enter contract details'}</p>
