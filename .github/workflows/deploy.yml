@@ -71,6 +71,7 @@ jobs:
           COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}  
           LAMBDA_ROLE_ARN: ${{ secrets.LAMBDA_ROLE_ARN }}  
           MARKETDATA_API_KEY: ${{ secrets.MARKETDATA_API_KEY }}  
+          ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
           CLIENT_BASE_URL: ${{ secrets.CLIENT_BASE_URL }}  
 
       - name: Run Tests
@@ -94,4 +95,5 @@ jobs:
           COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}    
           LAMBDA_ROLE_ARN: ${{ secrets.LAMBDA_ROLE_ARN }}  
           MARKETDATA_API_KEY: ${{ secrets.MARKETDATA_API_KEY }}  
+          ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
           CLIENT_BASE_URL: ${{ secrets.CLIENT_BASE_URL }}        
