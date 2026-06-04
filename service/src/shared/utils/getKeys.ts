@@ -9,6 +9,7 @@ export const EntityTypePosition = "POS";
 export const EntityTypePnL = "PNL";
 export const EntityTypeInstrument = "INSTR";
 export const ProcessedMark = "PROCESSED";
+export const EntityTypeNewsEvent = "NEWS";
 
 export const ApiGatewaySource = "API Gateway";
 export const EventBridgeScheduleSource = "EventBridge Schedule";
@@ -42,3 +43,6 @@ export const pnlSortKey = (txnDate: string, instrumentId: string, lotId: string)
 
 export const processedPartitionKey = (eventId: string) => `${ProcessedMark}#${eventId}`;
 export const processedSortKey = () =>`${ProcessedMark}`;
+
+export const newsEventPartitionKey = (userId: string) => `${EntityTypeUser}#${userId}`;
+export const newsEventSortKey =  (endDate: string) => `${EntityTypeNewsEvent}#${endDate}`;

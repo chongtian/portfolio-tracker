@@ -208,7 +208,7 @@ export class PortfolioTrackerStack extends cdk.Stack {
         TABLE_NAME: tableName,
         STAGE: stage,
         MARKETDATA_API_KEY: config.marketDataApiKey,
-        // ALPHA_VANTAGE_API_KEY: config.alphaVantageApiKey
+        ALPHA_VANTAGE_API_KEY: config.alphaVantageApiKey
       },
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,
@@ -240,7 +240,21 @@ export class PortfolioTrackerStack extends cdk.Stack {
       },
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,
-    });    
+    });   
+    
+    const getNewsFn = new NodejsFunction(this, 'GetNewsHandler', {
+      functionName: functionName(stage, 'getNews'),
+      entry: path.resolve(__dirname, '../../entries/getNewsHandler.ts'),
+      handler: 'getNewsHandler',
+      runtime: lambda.Runtime.NODEJS_24_X,
+      role: lambdaRole,
+      environment: {
+        TABLE_NAME: tableName,
+        STAGE: stage
+      },
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+    });     
 
     const listHistoryFn = new NodejsFunction(this, 'ListHistoryHandler', {
       functionName: functionName(stage, 'listHistory'),
@@ -362,6 +376,11 @@ export class PortfolioTrackerStack extends cdk.Stack {
       getLogsFn
     );    
 
+    const getNewsIntegration = new integrations.HttpLambdaIntegration(
+      'GetNewsIntegration',
+      getNewsFn
+    );     
+
     const summarizePositionIntegration = new integrations.HttpLambdaIntegration(
       'SummarizePositionIntegration',
       summarizePositionFn
@@ -447,7 +466,14 @@ export class PortfolioTrackerStack extends cdk.Stack {
       methods: [apigatewayv2.HttpMethod.GET],
       integration: getLogsIntegration,
       authorizer: jwtAuthorizer,
-    });    
+    });   
+    
+    api.addRoutes({
+      path: '/portfolio/news',
+      methods: [apigatewayv2.HttpMethod.GET],
+      integration: getNewsIntegration,
+      authorizer: jwtAuthorizer,
+    });     
 
     api.addRoutes({
       path: '/portfolio/summarize-position',
@@ -602,6 +628,11 @@ export class PortfolioTrackerStack extends cdk.Stack {
       value: getLogsFn.functionName,
       description: 'Get Logs Lambda function name',
     });    
+
+    new cdk.CfnOutput(this, 'GetNewsFunctionName', {
+      value: getNewsFn.functionName,
+      description: 'Get News Lambda function name',
+    });     
 
     new cdk.CfnOutput(this, 'ListPositionsFunctionName', {
       value: listPositionsFn.functionName,

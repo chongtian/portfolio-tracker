@@ -1,6 +1,7 @@
+import { DividendEvent } from "@shared/models/newsEvent";
 import { MarketPrice } from "@shared/models/marketPrice";
 
-interface AlphaVantageApiResponse {
+interface AlphaVantageTimeSeriesApiResponse {
     "Meta Data": MetaData;
     "Time Series (Daily)": TimeSeriesDaily;
 }
@@ -45,7 +46,20 @@ interface CleanDailyData {
     volume: number;
 }
 
-const transformAlphaVantageApiResponse = (raw: AlphaVantageApiResponse): AlphaVantageStockPriceData => {
+interface AlphaVantageDividendEventApiResponse {
+    symbol: string;
+    data: AlphaVantageDividendEventData[];
+}
+
+interface AlphaVantageDividendEventData {
+    ex_dividend_date: string;
+    declaration_date: string;
+    record_date: string;
+    payment_date: string;
+    amount: number;
+}
+
+const transformAlphaVantageApiResponse = (raw: AlphaVantageTimeSeriesApiResponse): AlphaVantageStockPriceData => {
     const meta = raw["Meta Data"];
 
     const toNumber = (value: string): number => {
@@ -79,6 +93,49 @@ const transformAlphaVantageApiResponse = (raw: AlphaVantageApiResponse): AlphaVa
     };
 }
 
+export const getDividentEventFromAlphaVantage = async (instrumentId: string, alphaVantageApiKey?: string): Promise<DividendEvent> => {
+    const result: DividendEvent = {
+        instrumentId: instrumentId,
+        success: false
+    };
+
+    result.source = 'ALPHA_VANTAGE';
+
+    if (!alphaVantageApiKey) {
+        result.success = false;
+        result.message = 'ALPHA_VANTAGE_API_KEY is not given.';
+        return result;
+    }
+
+    const url = `https://www.alphavantage.co/query?function=DIVIDENDS&symbol=${instrumentId}&apikey=${alphaVantageApiKey}`;
+    const res = await fetch(url, {
+        method: "GET"
+    });
+
+    if (!res.ok) {
+        const errText = await res.text();
+        console.error(`Failed to get dividend event from api for ${instrumentId}: ${errText}`);
+        result.success = false;
+        result.message = `Failed to get dividend event from api for ${instrumentId}: ${errText}`;
+    } else {
+        const raw = (await res.json()) as AlphaVantageDividendEventApiResponse;
+
+        if(raw && raw.data && raw.data.length > 0 && raw.data[0] && raw.data[0].amount && raw.data[0].payment_date != 'None'){
+            result.amount = raw.data[0].amount;
+            result.recordDate = raw.data[0].record_date;
+            result.paymentDate = raw.data[0].payment_date;
+            result.success = true;
+        } else {
+            console.error(`Failed to get dividend event from api for ${instrumentId}.${JSON.stringify(raw)}`);
+            result.success = false;
+            result.message = `Failed to get dividend event from api for ${instrumentId}. ${JSON.stringify(raw).substring(0,100)} ...`;
+        }
+        
+    }
+
+    return result;
+}
+
 export const getStockFundPriceFromAlphaVantage = async (instrumentId: string, alphaVantageApiKey?: string): Promise<MarketPrice> => {
     const result: MarketPrice = {
         success: false,
@@ -105,7 +162,7 @@ export const getStockFundPriceFromAlphaVantage = async (instrumentId: string, al
         result.success = false;
         result.message = `Failed to get market price from api for ${instrumentId}: ${errText}`;
     } else {
-        const raw = (await res.json()) as AlphaVantageApiResponse;
+        const raw = (await res.json()) as AlphaVantageTimeSeriesApiResponse;
         const data = transformAlphaVantageApiResponse(raw);
 
         if (!data.timeSeries[0]?.close) {
