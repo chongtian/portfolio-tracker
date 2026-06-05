@@ -141,8 +141,8 @@ export async function fetchNews(): Promise<NewsEventEntity[]> {
   return jsonRequest<NewsEventEntity[]>('/news');
 }
 
-export async function triggerSummarization(): Promise<Record<string, string>> {
-  return jsonRequest<Record<string, string>>('/summarize-position', {
+export async function triggerSummarization(): Promise<string[]> {
+  return jsonRequest<string[]>('/summarize-position', {
     method: 'POST',
   })
 }

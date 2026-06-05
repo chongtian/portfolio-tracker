@@ -9,12 +9,11 @@ import { expireOptionPosition } from "./expireOptionPosition";
 import { getMultipler } from "@shared/utils/getMultipler";
 import { SummaryEntity } from "@shared/models/summary";
 import { preciseRound } from "@shared/utils/mathHelper";
-import { setTimeout } from 'timers/promises';
 import { processNewsEventForDividend, processNewsEventForOption } from "./processNewsEvent";
 
-export const summarizePositions = async (userId: string, tableName: string, source?: string, currentDate?: Date): Promise<Record<string, string>> => {
+export const summarizePositions = async (userId: string, tableName: string, source?: string, currentDate?: Date): Promise<string[]> => {
 
-    const logs: Record<string, string> = {};
+    const logs: string[] = [];
     const accounts = await getItemsByPK<AccountEntity>(accountPartitionKey(userId), tableName, EntityTypeAccount);
     currentDate = currentDate || new Date();
 
@@ -38,10 +37,10 @@ export const summarizePositions = async (userId: string, tableName: string, sour
 
     } catch (error) {
         if (error instanceof Error && error.name === "ConditionalCheckFailedException") {
-            logs['SYSTEM'] += '\nAnother process is summarizing positions. Skipping this process.';
+            logs.push('Another process is summarizing positions. Skipping this process.');
         } else {
             console.error(error);
-            logs['SYSTEM'] += '\nFailed to summarize positions.';
+            logs.push('Failed to summarize positions.');
         }
         return logs;
     }
@@ -51,11 +50,11 @@ export const summarizePositions = async (userId: string, tableName: string, sour
         const accountName = account.accountName;
 
         if (account.active !== true) {
-            logs[accountId] = `Account ${accountName} is inactive, skipping`;
+            logs.push(`Account ${accountName} is inactive, skipping`);
             continue;
         }
 
-        logs[accountId] = `Updating positions for account ${accountName}.`;
+        logs.push(`Updating positions for account ${accountName}.`);
 
         // get all open positions for the account
         const param = {
@@ -71,11 +70,11 @@ export const summarizePositions = async (userId: string, tableName: string, sour
 
         const queryResult = await queryTable(param);
         const openPositions = queryResult.Items as PositionEntity[];
-        logs[accountId] += `\nFound ${openPositions.length} open positions.`;
+        logs.push(`${accountName}: Found ${openPositions.length} open positions.`);
 
         for (const position of openPositions) {
             const instrumentId = position.instrumentId;
-            logs[accountId] += `\nUpdating position for instrument ${instrumentId}.`;
+            logs.push(`${accountName}: Updating position for instrument ${instrumentId}.`);
 
             // check if the instrument is an option contract and if the contract is expired
             const optionContract = parseOptionContract(instrumentId);
@@ -89,25 +88,27 @@ export const summarizePositions = async (userId: string, tableName: string, sour
                     try {
                         const expireOptionTransactItems = await expireOptionPosition(position, expirationDate.toISOString(), tableName);
                         await sendCommand(new TransactWriteCommand({ TransactItems: expireOptionTransactItems }));
-                        logs[accountId] += `\nOption ${instrumentId} has beend expired.`;
+                        logs.push(`${accountName}: Option ${instrumentId} has beend expired.`);
                     } catch (error) {
                         console.error(`Failed to expire position ${position.PK}#${position.SK}:`, error);
-                        logs[accountId] += `\nFailed to expire position for instrument ${instrumentId}`;
+                        logs.push(`${accountName}: Failed to expire position for instrument ${instrumentId}`);
                     }
 
                     continue;
                 }
 
                 // for open option position, create option news
-                logs[accountId] += (await processNewsEventForOption(tableName, position.userId, optionContract, priceCache));
+                const msg = await processNewsEventForOption(tableName, position.userId, optionContract, priceCache);
+                logs.push(`${accountName}: ${msg}`);
             } else {
                 // create dividend news
                 try {
-                    logs[accountId] += (await processNewsEventForDividend(tableName, position.userId, instrumentId, apiCallTime));
+                    const msg = await processNewsEventForDividend(tableName, position.userId, instrumentId, apiCallTime);
+                    logs.push(`${accountName}: ${msg}`);
                     apiCallTime = (new Date()).getTime();
                 } catch (error) {
                     console.error(`Failed to get dividend news for instrument ${instrumentId}:`, error);
-                    logs[accountId] += `\nFailed to get dividend news for instrument ${instrumentId}.`;
+                    logs.push(`${accountName}: Failed to get dividend news for instrument ${instrumentId}.`);
                 }
             }
 
@@ -115,27 +116,19 @@ export const summarizePositions = async (userId: string, tableName: string, sour
             if (priceCache[instrumentId]) {
                 // get market price from cache
                 position.marketPrice = priceCache[instrumentId];
-                // messages[accountId] += `\nUsing cached market price for instrument ${instrumentId}: ${position.marketPrice}.`
             }
             else {
-                // messages[accountId] += `\nGetting market price for instrument ${instrumentId}.`;
-
-                // const waitTime = Math.max(0, 1000 - Math.abs((new Date).getTime() - apiCallTime));
-                // if (waitTime > 0) {
-                //     await setTimeout(waitTime);
-                // }
                 const marketPriceData = await getCurrentMarketPrice(instrumentId);
-                // apiCallTime = (new Date).getTime();
 
                 if (marketPriceData.success) {
                     const price = marketPriceData.price;
                     priceCache[instrumentId] = price!;
                     position.marketPrice = price!;
-                    logs[accountId] += `\nMarket price for ${instrumentId} is ${price} on ${marketPriceData.asOfDate}, from ${marketPriceData.source}`;
+                    logs.push(`${accountName}: Market price for ${instrumentId} is ${price} on ${marketPriceData.asOfDate}, from ${marketPriceData.source}`);
                 } else {
-                    logs[accountId] += `\nMarket price not available for ${instrumentId}: ${marketPriceData.message}`;
+                    logs.push(`${accountName}: Market price not available for ${instrumentId}: ${marketPriceData.message}`);
                     const price = position.totalCost / position.quantity / getMultipler(instrumentId); // fallback to average cost if market price not available    
-                    logs[accountId] += `\nUsing average cost as market price for ${instrumentId}: ${price}`;
+                    logs.push(`${accountName}: Using average cost as market price for ${instrumentId}: ${price}`);
                     priceCache[instrumentId] = price;
                     position.marketPrice = price;
                 }
@@ -162,7 +155,7 @@ export const summarizePositions = async (userId: string, tableName: string, sour
                     };
 
                     await updateItem(param);
-                    logs[accountId] += `\nPosition for instrument ${instrumentId} updated successfully`;
+                    logs.push(`${accountName}: Position for instrument ${instrumentId} updated successfully`);
 
                     // Save the Position as a Position History
                     position.SK = positionHistorySortKey(instrumentId, currentDate.toISOString().slice(0, 10));
@@ -172,9 +165,11 @@ export const summarizePositions = async (userId: string, tableName: string, sour
 
                 } catch (error) {
                     console.error(`Failed to update position ${position.PK}#${position.SK}:`, error);
-                    logs[accountId] += `\nFailed to update position for instrument ${instrumentId}`;
+                    logs.push(`${accountName}: Failed to update position for instrument ${instrumentId}`);
                 }
             }
+
+            logs.push(`${accountName}: Completed updating position for instrument ${instrumentId}.`);
         }
 
         // update Summary
@@ -196,7 +191,7 @@ export const summarizePositions = async (userId: string, tableName: string, sour
                 }
             };
             await updateItem(updateSummaryParam);
-            logs[accountId] += `\nSummary updated successfully`;
+            logs.push(`${accountName}: Summary updated successfully`);
 
             // Get the current Summary and save it as a Summary History
             const summaryItems = await getItemsByPKandSK<SummaryEntity>(summaryPartitionKey(userId, accountId), summarySortKey(), tableName);
@@ -210,7 +205,7 @@ export const summarizePositions = async (userId: string, tableName: string, sour
 
         } catch (error) {
             console.error(`Failed to update summary for account ${accountId}:`, error);
-            logs[accountId] += `\nFailed to update summary for account ${accountId}`;
+            logs.push(`${accountName}: Failed to update summary for account ${accountId}`);
         }
     }
 
@@ -230,7 +225,7 @@ export const summarizePositions = async (userId: string, tableName: string, sour
 
     } catch (error) {
         console.error(error);
-        logs['SYSTEM'] += '\nFailed to unlock table.';
+        logs.push('Failed to unlock table.');
     }
 
     return logs;

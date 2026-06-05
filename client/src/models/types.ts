@@ -29,7 +29,7 @@ export interface EventLog {
   SK: string;
   createdAt: string;
   event: string;
-  logs?: Record<string, string>;
+  logs?: string[];
   source: string;
   isProcessing?: boolean;
 }
