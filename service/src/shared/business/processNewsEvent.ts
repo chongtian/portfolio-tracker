@@ -37,7 +37,7 @@ export const processNewsEventForOption = async (
         FilterExpression: "instrumentId = :symbol AND newsType = :newsType",
         ExpressionAttributeValues: {
             ":pkValue": newsEventPartitionKey(userId),
-            ":skValue": newsEventSortKey(endDate),
+            ":skValue": newsEventSortKey(endDate, NewsType.OPTION, instrumentId),
             ":symbol": instrumentId,
             ":newsType": NewsType.OPTION
         }
@@ -59,7 +59,7 @@ export const processNewsEventForOption = async (
     } else {
         const n: NewsEventEntity = {
             PK: newsEventPartitionKey(userId),
-            SK: newsEventSortKey(endDate),
+            SK: newsEventSortKey(endDate, NewsType.OPTION, instrumentId),
             createdAt: (new Date()).toISOString(),
             entityType: EntityTypeNewsEvent,
             newsType: NewsType.OPTION,
@@ -98,7 +98,7 @@ export const processNewsEventForDividend = async (
         FilterExpression: "instrumentId = :symbol AND newsType = :newsType",
         ExpressionAttributeValues: {
             ":pkValue": newsEventPartitionKey(userId),
-            ":skValue": newsEventSortKey((new Date()).toISOString().slice(0, 10)),
+            ":skValue": newsEventSortKey((new Date()).toISOString().slice(0, 10), NewsType.DIV, instrumentId),
             ":symbol": instrumentId,
             ":newsType": NewsType.DIV
         }
@@ -123,7 +123,7 @@ export const processNewsEventForDividend = async (
 
             const n: NewsEventEntity = {
                 PK: newsEventPartitionKey(userId),
-                SK: newsEventSortKey(endDate),
+                SK: newsEventSortKey(endDate, NewsType.DIV, instrumentId),
                 createdAt: (new Date()).toISOString(),
                 entityType: EntityTypeNewsEvent,
                 newsType: NewsType.DIV,
