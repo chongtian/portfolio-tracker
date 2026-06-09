@@ -25,9 +25,9 @@ export const processNewsEventForOption = async (
         if (marketPriceData.success) {
             price = marketPriceData.price || 0;
             priceCache[instrumentId] = price;
-            log += `\nMarket price for ${instrumentId} is ${price} on ${marketPriceData.asOfDate}, from ${marketPriceData.source}`;
+            log += `Market price for ${instrumentId} is ${price} on ${marketPriceData.asOfDate}, from ${marketPriceData.source}. `;
         } else {
-            log += `\nMarket price not available for ${instrumentId}: ${marketPriceData.message}`;
+            log += `Market price not available for ${instrumentId}: ${marketPriceData.message}. `;
         }
     }
 
@@ -37,7 +37,7 @@ export const processNewsEventForOption = async (
         FilterExpression: "instrumentId = :symbol AND newsType = :newsType",
         ExpressionAttributeValues: {
             ":pkValue": newsEventPartitionKey(userId),
-            ":skValue": newsEventSortKey(endDate),
+            ":skValue": newsEventSortKey(endDate, NewsType.OPTION, instrumentId),
             ":symbol": instrumentId,
             ":newsType": NewsType.OPTION
         }
@@ -50,16 +50,16 @@ export const processNewsEventForOption = async (
             n.currentPrice = price;
             try {
                 await putItem(n, tableName);
-                log += `\nProcess news for ${optionContract.instrumentId}.`;
+                log += `Updated news for ${optionContract.instrumentId}. `;
             } catch (error) {
                 console.error(error);
-                log += `\nFailed to save news for ${optionContract.instrumentId}.`;
+                log += `Failed to save news for ${optionContract.instrumentId}. `;
             }
         }
     } else {
         const n: NewsEventEntity = {
             PK: newsEventPartitionKey(userId),
-            SK: newsEventSortKey(endDate),
+            SK: newsEventSortKey(endDate, NewsType.OPTION, instrumentId),
             createdAt: (new Date()).toISOString(),
             entityType: EntityTypeNewsEvent,
             newsType: NewsType.OPTION,
@@ -71,10 +71,10 @@ export const processNewsEventForOption = async (
 
         try {
             await putItem(n, tableName);
-            log += `\nProcess news for ${optionContract.instrumentId}.`;
+            log += `Created news for ${optionContract.instrumentId}.`;
         } catch (error) {
             console.error(error);
-            log += `\nFailed to save news for ${optionContract.instrumentId}.`;
+            log += `Failed to save news for ${optionContract.instrumentId}.`;
         }
     }
 
@@ -98,7 +98,7 @@ export const processNewsEventForDividend = async (
         FilterExpression: "instrumentId = :symbol AND newsType = :newsType",
         ExpressionAttributeValues: {
             ":pkValue": newsEventPartitionKey(userId),
-            ":skValue": newsEventSortKey((new Date()).toISOString().slice(0, 10)),
+            ":skValue": newsEventSortKey((new Date()).toISOString().slice(0, 10), NewsType.DIV, instrumentId),
             ":symbol": instrumentId,
             ":newsType": NewsType.DIV
         }
@@ -123,7 +123,7 @@ export const processNewsEventForDividend = async (
 
             const n: NewsEventEntity = {
                 PK: newsEventPartitionKey(userId),
-                SK: newsEventSortKey(endDate),
+                SK: newsEventSortKey(endDate, NewsType.DIV, instrumentId),
                 createdAt: (new Date()).toISOString(),
                 entityType: EntityTypeNewsEvent,
                 newsType: NewsType.DIV,
@@ -137,16 +137,16 @@ export const processNewsEventForDividend = async (
 
             try {
                 await putItem(n, tableName);
-                log += `\nProcess dividend news for ${instrumentId}.`;
+                log += `Processed dividend news for ${instrumentId}. `;
             } catch (error) {
                 console.error(error);
-                log += `\nFailed to save news for ${instrumentId}.`;
+                log += `Failed to save news for ${instrumentId}. `;
             }
         } else {
-            log += `\nFailed to get dividend news for ${instrumentId}: ${dividendEvent.message}.`;
+            log += `Failed to get dividend news for ${instrumentId}: ${dividendEvent.message}. `;
         }
     } else {
-        log += `\nExisting dividend news for ${instrumentId}.`;
+        log += `Dividend news for ${instrumentId} already exists. `;
     }
 
     return log;

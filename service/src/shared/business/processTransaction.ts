@@ -11,17 +11,18 @@ export const processTransaction = async (txn: TransactionEntity, stage: string, 
 
     const transactItems: TransactItems = [];
 
-    const cashUpdates = cashTransactionHandler(userId!, accountId, TABLE_NAME(stage), txn);
-    transactItems.push(...cashUpdates);
-
     const splitUpdates = await splitTransactionHandler(userId!, accountId, TABLE_NAME(stage), txn);
     transactItems.push(...splitUpdates);
 
     const buySellUpdates = await buySellTransactionHandler(userId!, accountId, TABLE_NAME(stage), txn);
-    transactItems.push(...buySellUpdates);
+    transactItems.push(...buySellUpdates.items);
+    txn.cashCollateral = (txn.cashCollateral || 0) - buySellUpdates.releaseCollateral;
 
     const dividendUpdates = await dividendTransactionHandler(userId!, accountId, TABLE_NAME(stage), txn);
     transactItems.push(...dividendUpdates);
+
+    const cashUpdates = cashTransactionHandler(userId!, accountId, TABLE_NAME(stage), txn);
+    transactItems.push(...cashUpdates);
 
     return transactItems;
 }

@@ -20,7 +20,7 @@ export const userSortKey = EntityTypeUser;
 export const accountPartitionKey = (userId: string) => `${EntityTypeUser}#${userId}`;
 export const accountSortKey = (accountId: string) => `${EntityTypeAccount}#${accountId}`;
 
-export const transactionPartitionKey = (userId: string ) => `${EntityTypeUser}#${userId}`;
+export const transactionPartitionKey = (userId: string) => `${EntityTypeUser}#${userId}`;
 export const transactionSortKey = (accountId: string, txnDate: string, txnId: string) => `${EntityTypeTransaction}#${txnDate}#${EntityTypeAccount}#${accountId}#${txnId}`;
 
 export const cashPartitionKey = (userId: string, accountId: string) => `${EntityTypeUser}#${userId}#ACCOUNT#${accountId}`;
@@ -42,7 +42,7 @@ export const pnlPartitionKey = (userId: string, accountId: string) => `${EntityT
 export const pnlSortKey = (txnDate: string, instrumentId: string, lotId: string) => `${EntityTypePnL}#${txnDate}#${EntityTypeInstrument}#${instrumentId}#${lotId}`;
 
 export const processedPartitionKey = (eventId: string) => `${ProcessedMark}#${eventId}`;
-export const processedSortKey = () =>`${ProcessedMark}`;
+export const processedSortKey = () => `${ProcessedMark}`;
 
 export const newsEventPartitionKey = (userId: string) => `${EntityTypeUser}#${userId}`;
-export const newsEventSortKey =  (endDate: string) => `${EntityTypeNewsEvent}#${endDate}`;
+export const newsEventSortKey = (endDate: string, newsType: string, symbol: string) => `${EntityTypeNewsEvent}#${endDate}#${newsType}#${symbol}`;

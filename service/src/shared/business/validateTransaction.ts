@@ -66,8 +66,12 @@ export const validateTransaction = (input: TransactionInput): ValidateResult => 
         return { success: false, error: `Missing or invalid split ratio for split transaction` };
     }
 
-    if (transactionType !== TransactionType.SPLIT && (!input.quantity || !input.price)) {
+    if (transactionType !== TransactionType.SPLIT && assetType !== AssetType.OPTION && (!input.quantity || !input.price)) {
         return { success: false, error: `Missing quantity or price for transaction type ${transactionType}` };
+    }
+
+    if (transactionType !== TransactionType.SPLIT && assetType === AssetType.OPTION && !input.quantity && !input.price) {
+        return { success: false, error: `Missing quantity and price for transaction type ${transactionType}` };
     }
 
     if (assetType === AssetType.OPTION) {

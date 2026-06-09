@@ -1,18 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { fetchLogsForSummarization, triggerSummarization } from '../services/api'
 import './PageStyles.css'
-import { useAccounts } from '../hooks/useAccounts'
 import { useGlobalLoading } from '../hooks/LoadingContext'
 
 export default function SummarizationPage() {
   const { startLoading, stopLoading } = useGlobalLoading()
-  const { state } = useAccounts()
-  const { accounts } = state
-
-  const accountMap = useMemo(() => {
-    return new Map(accounts.map(a => [a.accountId, a.accountName]))
-  }, [accounts])
-
   const [status, setStatus] = useState('idle')
   const [messages, setMessage] = useState([] as string[])
 
@@ -23,15 +15,7 @@ export default function SummarizationPage() {
         // there shall be only one log
         if (data && data[0]) {
           const log = data[0]
-          const message = []
-          message.push(`source: ${log.source}`, `last run: ${(new Date(log.createdAt)).toLocaleString()}`, `isProcessing: ${log.isProcessing ?? false}`)
-          if (log.logs) {
-            for (const [key, value] of Object.entries(log.logs)) {
-              const msgs = value.split('\n').map(m => `${accountMap.get(key) || 'Unknown'}: ${m}`)
-              message.push(...msgs)
-            }
-          }
-          setMessage(message)
+          setMessage(log.logs ?? [])
         }
       }
     ).catch(
@@ -52,10 +36,7 @@ export default function SummarizationPage() {
     triggerSummarization().then(
       messages => {
         const message = ['Summarization has been triggered.']
-        for (const [key, value] of Object.entries(messages)) {
-          const msgs = value.split('\n').map(m => `${accountMap.get(key) || 'Unknown'}: ${m}`)
-          message.push(...msgs)
-        }
+        message.push(...messages)
         setStatus('success')
         setMessage(message)
       }
