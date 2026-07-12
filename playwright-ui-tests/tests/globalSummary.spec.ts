@@ -57,6 +57,7 @@ test.describe('Global Summary', () => {
         await expect(accountPage.getPositionQuantity(3)).toHaveText('-2');        
         await expect(accountPage.getPositionInstrumentId(4)).toHaveText('VFH');
         await expect(accountPage.getPositionQuantity(4)).toHaveText('2175');
+        await expect(accountPage.getPositionAverageCost(4)).toHaveText('$122.79');
         await expect(accountPage.getPositionMarketValue(4)).toHaveText('$275,898.75');
         await expect(accountPage.getPositionUnrealizedPnL(4)).toHaveText('$8,821.25');
 
