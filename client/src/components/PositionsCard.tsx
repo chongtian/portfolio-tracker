@@ -14,6 +14,7 @@ export default function PositionCard({ positions }: PositionsData) {
                     <tr>
                         <th>Instrument</th>
                         <th>Quantity</th>
+                        <th>Average Cost</th>
                         <th>Market value</th>
                         <th>Unrealized PnL</th>
                     </tr>
@@ -23,6 +24,7 @@ export default function PositionCard({ positions }: PositionsData) {
                         <tr key={position.instrumentId}>
                             <td>{position.instrumentId}</td>
                             <td>{position.quantity}</td>
+                            <td>{formatCurrency(position.totalCost / position.quantity)}</td>
                             <td>{formatCurrency(position.marketValue)}</td>
                             <td>{formatCurrency(position.unrealizedPnl)}</td>
                         </tr>

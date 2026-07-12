@@ -101,14 +101,19 @@ export class AccountDetailPage {
         return tr.locator('td:nth-child(2)');
     }
 
-    getPositionMarketValue(index: number) {
+    getPositionAverageCost(index: number) {
         const tr = this.getPositionRow(index);
         return tr.locator('td:nth-child(3)');
+    }    
+
+    getPositionMarketValue(index: number) {
+        const tr = this.getPositionRow(index);
+        return tr.locator('td:nth-child(4)');
     }
 
     getPositionUnrealizedPnL(index: number) {
         const tr = this.getPositionRow(index);
-        return tr.locator('td:nth-child(4)');
+        return tr.locator('td:nth-child(5)');
     }
 
     private getPositionRow(index: number) {
